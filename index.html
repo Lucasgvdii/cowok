@@ -221,20 +221,56 @@
         /* ============================================
            HEADER & NAVIGATION
            ============================================ */
-        .header {
+        .header-wrapper {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: var(--header-height);
-            background-color: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
             z-index: 1000;
+            padding: var(--spacing-md) var(--spacing-md) 0;
+            transition: padding var(--transition-normal);
+        }
+
+        .header-wrapper--scrolled {
+            padding: var(--spacing-xs) var(--spacing-md) 0;
+        }
+
+        .header {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            height: var(--header-height);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius-md);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             transition: all var(--transition-normal);
+            padding: 0 var(--spacing-lg);
         }
 
         .header--scrolled {
-            box-shadow: var(--shadow-md);
+            height: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(200, 200, 200, 0.3);
+        }
+
+        .header--scrolled .logo {
+            color: var(--color-primary);
+        }
+
+        .header--scrolled .nav__link {
+            color: var(--color-gray-700);
+        }
+
+        .header--scrolled .hamburger__line {
+            background-color: var(--color-primary);
+        }
+
+        .header--scrolled .btn--primary {
+            padding: var(--spacing-xs) var(--spacing-md);
+            font-size: 0.85rem;
         }
 
         .header__container {
@@ -248,7 +284,8 @@
             font-family: var(--font-display);
             font-size: 1.8rem;
             font-weight: 700;
-            color: var(--color-primary);
+            color: var(--color-white);
+            transition: color var(--transition-normal);
         }
 
         .logo span {
@@ -268,9 +305,10 @@
 
         .nav__link {
             font-weight: 500;
-            color: var(--color-gray-700);
+            color: rgba(255, 255, 255, 0.9);
             position: relative;
             padding: var(--spacing-xs) 0;
+            transition: color var(--transition-fast);
         }
 
         .nav__link::after {
@@ -303,7 +341,7 @@
         .hamburger__line {
             width: 25px;
             height: 2px;
-            background-color: var(--color-primary);
+            background-color: var(--color-white);
             transition: all var(--transition-fast);
         }
 
@@ -354,39 +392,31 @@
             min-height: 100vh;
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            background-color: #1C2134;
             overflow: hidden;
-        }
-
-        .hero__bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-            opacity: 0.3;
         }
 
         .hero__content {
             position: relative;
             z-index: 1;
-            max-width: 700px;
+            width: 100%;
             color: var(--color-white);
-            padding: calc(var(--header-height) + var(--spacing-xl)) 0;
+            padding: calc(var(--header-height) + 8rem) 0;
         }
 
         .hero__badge {
-            display: inline-block;
+            display: block;
+            text-align: center;
             padding: var(--spacing-xs) var(--spacing-sm);
             background-color: rgba(233, 69, 96, 0.2);
             border: 1px solid var(--color-accent);
             border-radius: var(--border-radius-xl);
             font-size: 0.85rem;
             color: var(--color-accent);
-            margin-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .hero__title {
@@ -395,10 +425,11 @@
         }
 
         .hero__subtitle {
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             color: var(--color-gray-300);
             margin-bottom: var(--spacing-xl);
             line-height: 1.7;
+            max-width: 700px;
         }
 
         .hero__buttons {
@@ -407,28 +438,49 @@
             flex-wrap: wrap;
         }
 
-        .hero__stats {
-            display: flex;
-            gap: var(--spacing-xl);
+        .hero__cta {
             margin-top: var(--spacing-2xl);
             padding-top: var(--spacing-xl);
             border-top: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .hero__stat {
             text-align: center;
         }
 
-        .hero__stat-number {
+        .hero__cta-text {
             font-family: var(--font-display);
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: 1.5rem;
+            font-weight: 500;
             color: var(--color-accent);
+            margin-bottom: var(--spacing-md);
         }
 
-        .hero__stat-label {
-            font-size: 0.9rem;
-            color: var(--color-gray-400);
+        .hero__scroll-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            color: var(--color-white);
+            animation: bounce 2s infinite;
+        }
+
+        .hero__scroll-arrow svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            40% {
+                transform: translateY(10px);
+                opacity: 0.7;
+            }
+            60% {
+                transform: translateY(5px);
+                opacity: 0.85;
+            }
         }
 
         /* ============================================
@@ -436,51 +488,185 @@
            ============================================ */
         .features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: var(--spacing-lg);
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--spacing-md);
         }
 
         .feature-card {
             background-color: var(--color-white);
-            padding: var(--spacing-xl);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius-md);
+            border: 1px solid var(--color-gray-200);
             transition: all var(--transition-normal);
         }
 
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-xl);
+            border-color: var(--color-gray-300);
         }
 
         .feature-card__icon {
-            width: 60px;
-            height: 60px;
+            width: 45px;
+            height: 45px;
             background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-warm) 100%);
-            border-radius: var(--border-radius-md);
+            border-radius: var(--border-radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
         }
 
         .feature-card__icon svg {
-            width: 30px;
-            height: 30px;
+            width: 22px;
+            height: 22px;
             stroke: var(--color-white);
             fill: none;
             stroke-width: 2;
         }
 
         .feature-card__title {
-            font-size: 1.25rem;
-            margin-bottom: var(--spacing-sm);
+            font-family: Arial, sans-serif;
+            font-size: 1rem;
+            margin-bottom: var(--spacing-xs);
             color: var(--color-gray-900);
         }
 
-        .feature-card__description {
+        .feature-card__list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .feature-card__item {
             color: var(--color-gray-600);
-            font-size: 0.95rem;
+            font-size: 0.8rem;
+            padding: 8px 10px 8px 36px;
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--border-radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            user-select: none;
+            position: relative;
+        }
+
+        .feature-card__item::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--color-gray-300);
+            border-radius: 50%;
+            transition: all var(--transition-fast);
+        }
+
+        .feature-card__item:hover {
+            border-color: var(--color-gray-400);
+            background-color: var(--color-gray-100);
+        }
+
+        .feature-card__item:hover::before {
+            border-color: var(--color-gray-400);
+        }
+
+        .feature-card__item--selected {
+            border-color: var(--color-accent);
+            background-color: rgba(233, 69, 96, 0.05);
+            color: var(--color-gray-800);
+        }
+
+        .feature-card__item--selected::before {
+            background-color: var(--color-accent);
+            border-color: var(--color-accent);
+        }
+
+        .feature-card__item--selected::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+        }
+
+        .features-email {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.4s ease;
+            margin-top: 0;
+        }
+
+        .features-email--visible {
+            max-height: 200px;
+            opacity: 1;
+            margin-top: var(--spacing-lg);
+        }
+
+        .features-email__container {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            text-align: center;
+        }
+
+        .features-email__text {
+            color: var(--color-white);
+            margin-bottom: var(--spacing-md);
+            font-size: 1rem;
+        }
+
+        .features-email__form {
+            display: flex;
+            gap: var(--spacing-sm);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .features-email__input {
+            flex: 1;
+            padding: 10px var(--spacing-md);
+            border: 2px solid transparent;
+            border-radius: var(--border-radius-md);
+            font-size: 1rem;
+            font-family: var(--font-primary);
+            outline: none;
+            transition: border-color var(--transition-fast);
+        }
+
+        .features-email__input:focus {
+            border-color: var(--color-accent);
+        }
+
+        .features-email__submit {
+            width: 48px;
+            height: 48px;
+            background-color: var(--color-accent);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .features-email__submit:hover {
+            background-color: var(--color-accent-hover);
+            transform: scale(1.05);
+        }
+
+        .features-email__submit svg {
+            width: 22px;
+            height: 22px;
+            color: var(--color-white);
         }
 
         /* ============================================
@@ -930,6 +1116,23 @@
                 --header-height: 70px;
             }
 
+            .header-wrapper {
+                padding: var(--spacing-sm) var(--spacing-sm) 0;
+            }
+
+            .header-wrapper--scrolled {
+                padding: var(--spacing-xs) var(--spacing-sm) 0;
+            }
+
+            .header {
+                padding: 0 var(--spacing-md);
+                border-radius: var(--border-radius-lg);
+            }
+
+            .header--scrolled {
+                height: 55px;
+            }
+
             .nav__list,
             .nav .btn {
                 display: none;
@@ -943,22 +1146,25 @@
                 padding: calc(var(--header-height) + var(--spacing-lg)) 0 var(--spacing-xl);
             }
 
-            .hero__stats {
-                flex-direction: column;
-                gap: var(--spacing-lg);
-                align-items: flex-start;
+            .hero__badge {
+                margin-bottom: var(--spacing-md);
             }
 
-            .hero__stat {
-                text-align: left;
+            .hero__cta-text {
+                font-size: 1.2rem;
             }
 
             .hero__buttons {
                 flex-direction: column;
+                width: 100%;
             }
 
             .hero__buttons .btn {
                 width: 100%;
+            }
+
+            .features {
+                grid-template-columns: repeat(2, 1fr);
             }
 
             .spaces__grid {
@@ -1066,28 +1272,30 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header" id="header">
-        <div class="container header__container">
-            <a href="#" class="logo">Cow<span>ok</span></a>
+    <div class="header-wrapper" id="headerWrapper">
+        <header class="header" id="header">
+            <div class="header__container">
+                <a href="#" class="logo">Cow<span>ok</span></a>
 
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li><a href="#espacios" class="nav__link">Espacios</a></li>
-                    <li><a href="#servicios" class="nav__link">Servicios</a></li>
-                    <li><a href="#precios" class="nav__link">Precios</a></li>
-                    <li><a href="#faq" class="nav__link">FAQ</a></li>
-                    <li><a href="#contacto" class="nav__link">Contacto</a></li>
-                </ul>
-                <a href="#precios" class="btn btn--primary">Reservar</a>
-            </nav>
+                <nav class="nav">
+                    <ul class="nav__list">
+                        <li><a href="#espacios" class="nav__link">Espacios</a></li>
+                        <li><a href="#servicios" class="nav__link">Servicios</a></li>
+                        <li><a href="#precios" class="nav__link">Precios</a></li>
+                        <li><a href="#faq" class="nav__link">FAQ</a></li>
+                        <li><a href="#contacto" class="nav__link">Contacto</a></li>
+                    </ul>
+                    <a href="#precios" class="btn btn--primary">Reservar</a>
+                </nav>
 
-            <button class="hamburger" id="hamburger" aria-label="Menú">
-                <span class="hamburger__line"></span>
-                <span class="hamburger__line"></span>
-                <span class="hamburger__line"></span>
-            </button>
-        </div>
-    </header>
+                <button class="hamburger" id="hamburger" aria-label="MenÃº">
+                    <span class="hamburger__line"></span>
+                    <span class="hamburger__line"></span>
+                    <span class="hamburger__line"></span>
+                </button>
+            </div>
+        </header>
+    </div>
 
     <!-- Mobile Navigation -->
     <nav class="nav-mobile" id="navMobile">
@@ -1101,33 +1309,24 @@
 
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero__bg"></div>
         <div class="container">
             <div class="hero__content">
-                <span class="hero__badge">( Nuevo espacio en el centro</span>
+                <span class="hero__badge">Nuevo Cowok Cervantes!</span>
                 <h1 class="hero__title">Tu espacio de trabajo ideal</h1>
                 <p class="hero__subtitle">
-                    Cowok es más que un coworking. Es una comunidad de profesionales,
-                    emprendedores y creativos que buscan un lugar inspirador para trabajar,
-                    conectar y crecer.
+                    Cowok es un lienzo en blanco. Creamos coworkings adaptados a los trabajadores, intentando que lo que pagan se reinvierta en sus necesidades a medida que se desarrolla cada proyecto. AdemÃ¡s, intentamos crear sinergias con los negocios adyacentes para conseguir beneficios para los asistentes, como por ejemplo comidas o gimnasio.
                 </p>
                 <div class="hero__buttons">
-                    <a href="#precios" class="btn btn--primary btn--large">Empieza hoy</a>
-                    <a href="#espacios" class="btn btn--outline btn--large">Descubre los espacios</a>
+                    <a href="#contacto" class="btn btn--primary btn--large">Lista de espera</a>
+                    <a href="#contacto" class="btn btn--outline btn--large">ContÃ¡ctanos!</a>
                 </div>
-                <div class="hero__stats">
-                    <div class="hero__stat">
-                        <div class="hero__stat-number">500+</div>
-                        <div class="hero__stat-label">Miembros activos</div>
-                    </div>
-                    <div class="hero__stat">
-                        <div class="hero__stat-number">24/7</div>
-                        <div class="hero__stat-label">Acceso disponible</div>
-                    </div>
-                    <div class="hero__stat">
-                        <div class="hero__stat-number">15+</div>
-                        <div class="hero__stat-label">Salas de reuniones</div>
-                    </div>
+                <div class="hero__cta">
+                    <p class="hero__cta-text">Cowok Cervantes - DiseÃ±alo tu mismo!</p>
+                    <a href="#servicios" class="hero__scroll-arrow" aria-label="Ir a siguiente secciÃ³n">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -1137,22 +1336,27 @@
     <section class="section" id="servicios">
         <div class="container">
             <div class="text-center">
-                <h2>Todo lo que necesitas</h2>
+                <h2>AyÃºdanos a saber quÃ© necesitas!</h2>
                 <p class="section-subtitle">
-                    Espacios diseñados para potenciar tu productividad y bienestar
+                    Espacios diseÃ±ados para potenciar tu productividad y bienestar
                 </p>
             </div>
             <div class="features">
                 <div class="feature-card">
                     <div class="feature-card__icon">
                         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
                         </svg>
                     </div>
-                    <h3 class="feature-card__title">Internet ultrarrápido</h3>
-                    <p class="feature-card__description">
-                        Conexión de fibra óptica simétrica de 1Gbps para que trabajes sin interrupciones.
-                    </p>
+                    <h3 class="feature-card__title">Work Confort</h3>
+                    <div class="feature-card__list">
+                        <div class="feature-card__item">Internet de alta velocidad</div>
+                        <div class="feature-card__item">Pantalla</div>
+                        <div class="feature-card__item">Escritorio elevable</div>
+                        <div class="feature-card__item">Silla ErgonÃ³mica</div>
+                    </div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-card__icon">
@@ -1163,10 +1367,13 @@
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
                     </div>
-                    <h3 class="feature-card__title">Comunidad activa</h3>
-                    <p class="feature-card__description">
-                        Eventos de networking, workshops y encuentros para conectar con otros profesionales.
-                    </p>
+                    <h3 class="feature-card__title">Cowork Confort</h3>
+                    <div class="feature-card__list">
+                        <div class="feature-card__item">Salas de reuniones</div>
+                        <div class="feature-card__item">Silence Booth</div>
+                        <div class="feature-card__item">Escritorio fijo</div>
+                        <div class="feature-card__item">Almacenamiento Personal</div>
+                    </div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-card__icon">
@@ -1178,47 +1385,42 @@
                             <line x1="14" y1="1" x2="14" y2="4"/>
                         </svg>
                     </div>
-                    <h3 class="feature-card__title">Café & snacks</h3>
-                    <p class="feature-card__description">
-                        Café de especialidad, té premium y snacks saludables ilimitados durante todo el día.
-                    </p>
+                    <h3 class="feature-card__title">Food Confort</h3>
+                    <div class="feature-card__list">
+                        <div class="feature-card__item">CafÃ© & TÃ©</div>
+                        <div class="feature-card__item">Desayunos</div>
+                        <div class="feature-card__item">Comidas</div>
+                        <div class="feature-card__item">Cenas</div>
+                    </div>
                 </div>
                 <div class="feature-card">
                     <div class="feature-card__icon">
                         <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                            <line x1="3" y1="9" x2="21" y2="9"/>
-                            <line x1="9" y1="21" x2="9" y2="9"/>
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                         </svg>
                     </div>
-                    <h3 class="feature-card__title">Salas de reuniones</h3>
-                    <p class="feature-card__description">
-                        Espacios privados equipados con pantallas, pizarras y videoconferencia para tus reuniones.
-                    </p>
+                    <h3 class="feature-card__title">Health Confort</h3>
+                    <div class="feature-card__list">
+                        <div class="feature-card__item">Instalaciones deportivas</div>
+                        <div class="feature-card__item">Zonas de descanso</div>
+                        <div class="feature-card__item">Actividades y networking</div>
+                    </div>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-card__icon">
-                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <polyline points="12 6 12 12 16 14"/>
-                        </svg>
+            </div>
+
+            <!-- Email form that appears when items are selected -->
+            <div class="features-email" id="featuresEmail">
+                <div class="features-email__container">
+                    <p class="features-email__text">DÃ©janos tu email y te avisaremos cuando estÃ© disponible</p>
+                    <div class="features-email__form">
+                        <input type="email" class="features-email__input" placeholder="tu@email.com" id="featuresEmailInput">
+                        <button class="features-email__submit" id="featuresEmailSubmit" aria-label="Enviar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                            </svg>
+                        </button>
                     </div>
-                    <h3 class="feature-card__title">Acceso 24/7</h3>
-                    <p class="feature-card__description">
-                        Trabaja cuando quieras. Nuestro espacio está disponible las 24 horas, los 7 días.
-                    </p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-card__icon">
-                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                            <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                    </div>
-                    <h3 class="feature-card__title">Ubicación céntrica</h3>
-                    <p class="feature-card__description">
-                        En el corazón de la ciudad, con excelente conexión de transporte público.
-                    </p>
                 </div>
             </div>
         </div>
@@ -1230,7 +1432,7 @@
             <div class="text-center">
                 <h2>Nuestros espacios</h2>
                 <p class="section-subtitle">
-                    Diseñados para inspirar creatividad y maximizar la productividad
+                    Diseï¿½ados para inspirar creatividad y maximizar la productividad
                 </p>
             </div>
             <div class="spaces__grid">
@@ -1252,14 +1454,14 @@
                     <img src="https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80" alt="Salas de Reuniones" class="space-card__image">
                     <div class="space-card__overlay">
                         <h3 class="space-card__title">Salas de Reuniones</h3>
-                        <p class="space-card__description">Equipadas con tecnología de última generación</p>
+                        <p class="space-card__description">Equipadas con tecnologï¿½a de ï¿½ltima generaciï¿½n</p>
                     </div>
                 </div>
                 <div class="space-card">
                     <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=600&q=80" alt="Zona Lounge" class="space-card__image">
                     <div class="space-card__overlay">
                         <h3 class="space-card__title">Zona Lounge</h3>
-                        <p class="space-card__description">Área de descanso y networking informal</p>
+                        <p class="space-card__description">ï¿½rea de descanso y networking informal</p>
                     </div>
                 </div>
                 <div class="space-card">
@@ -1287,9 +1489,9 @@
                     <h3 class="pricing-card__name">Day Pass</h3>
                     <p class="pricing-card__description">Perfecto para probar el espacio o trabajo ocasional</p>
                     <div class="pricing-card__price">
-                        <span class="pricing-card__currency">¬</span>
+                        <span class="pricing-card__currency">ï¿½</span>
                         <span class="pricing-card__amount">25</span>
-                        <span class="pricing-card__period">/día</span>
+                        <span class="pricing-card__period">/dï¿½a</span>
                     </div>
                     <ul class="pricing-card__features">
                         <li class="pricing-card__feature">
@@ -1308,7 +1510,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            Café y snacks incluidos
+                            Cafï¿½ y snacks incluidos
                         </li>
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1317,14 +1519,14 @@
                             Horario: 9:00 - 19:00
                         </li>
                     </ul>
-                    <a href="#contacto" class="btn btn--secondary">Reservar día</a>
+                    <a href="#contacto" class="btn btn--secondary">Reservar dï¿½a</a>
                 </div>
                 <div class="pricing-card pricing-card--featured">
-                    <span class="pricing-card__badge">Más popular</span>
+                    <span class="pricing-card__badge">Mï¿½s popular</span>
                     <h3 class="pricing-card__name">Flexible</h3>
                     <p class="pricing-card__description">Para profesionales que buscan flexibilidad total</p>
                     <div class="pricing-card__price">
-                        <span class="pricing-card__currency">¬</span>
+                        <span class="pricing-card__currency">ï¿½</span>
                         <span class="pricing-card__amount">199</span>
                         <span class="pricing-card__period">/mes</span>
                     </div>
@@ -1345,7 +1547,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            4h salas de reunión/mes
+                            4h salas de reuniï¿½n/mes
                         </li>
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1357,7 +1559,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            Dirección fiscal
+                            Direcciï¿½n fiscal
                         </li>
                     </ul>
                     <a href="#contacto" class="btn btn--primary">Empezar ahora</a>
@@ -1366,7 +1568,7 @@
                     <h3 class="pricing-card__name">Dedicado</h3>
                     <p class="pricing-card__description">Tu escritorio fijo con todas las comodidades</p>
                     <div class="pricing-card__price">
-                        <span class="pricing-card__currency">¬</span>
+                        <span class="pricing-card__currency">ï¿½</span>
                         <span class="pricing-card__amount">349</span>
                         <span class="pricing-card__period">/mes</span>
                     </div>
@@ -1387,7 +1589,7 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            10h salas de reunión/mes
+                            10h salas de reuniï¿½n/mes
                         </li>
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1414,26 +1616,26 @@
             <div class="text-center">
                 <h2>Lo que dicen nuestros miembros</h2>
                 <p class="section-subtitle">
-                    Más de 500 profesionales ya confían en Cowok
+                    Mï¿½s de 500 profesionales ya confï¿½an en Cowok
                 </p>
             </div>
             <div class="testimonials__grid">
                 <div class="testimonial-card">
                     <p class="testimonial-card__quote">
-                        Cowok ha transformado mi forma de trabajar. El ambiente es increíble y la comunidad
+                        Cowok ha transformado mi forma de trabajar. El ambiente es increï¿½ble y la comunidad
                         me ha ayudado a hacer conexiones muy valiosas para mi negocio.
                     </p>
                     <div class="testimonial-card__author">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="María García" class="testimonial-card__avatar">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Marï¿½a Garcï¿½a" class="testimonial-card__avatar">
                         <div>
-                            <div class="testimonial-card__name">María García</div>
+                            <div class="testimonial-card__name">Marï¿½a Garcï¿½a</div>
                             <div class="testimonial-card__role">Fundadora, DesignLab</div>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
                     <p class="testimonial-card__quote">
-                        Después de probar varios coworkings, Cowok es el único donde me siento realmente
+                        Despuï¿½s de probar varios coworkings, Cowok es el ï¿½nico donde me siento realmente
                         productivo. La calidad de los espacios y servicios es excepcional.
                     </p>
                     <div class="testimonial-card__author">
@@ -1446,13 +1648,13 @@
                 </div>
                 <div class="testimonial-card">
                     <p class="testimonial-card__quote">
-                        Mi startup creció aquí. Los eventos de networking y la comunidad fueron clave
+                        Mi startup creciï¿½ aquï¿½. Los eventos de networking y la comunidad fueron clave
                         para encontrar a mis primeros clientes y socios.
                     </p>
                     <div class="testimonial-card__author">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Ana Martínez" class="testimonial-card__avatar">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Ana Martï¿½nez" class="testimonial-card__avatar">
                         <div>
-                            <div class="testimonial-card__name">Ana Martínez</div>
+                            <div class="testimonial-card__name">Ana Martï¿½nez</div>
                             <div class="testimonial-card__role">CEO, TechStart</div>
                         </div>
                     </div>
@@ -1473,76 +1675,76 @@
             <div class="faq__list">
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        ¿Puedo probar el espacio antes de comprometerme?
+                        ï¿½Puedo probar el espacio antes de comprometerme?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            ¡Por supuesto! Ofrecemos un día de prueba gratuito para que puedas experimentar
-                            nuestro espacio y comunidad. También puedes comprar un Day Pass sin compromiso.
-                            Agenda tu visita a través del formulario de contacto.
+                            ï¿½Por supuesto! Ofrecemos un dï¿½a de prueba gratuito para que puedas experimentar
+                            nuestro espacio y comunidad. Tambiï¿½n puedes comprar un Day Pass sin compromiso.
+                            Agenda tu visita a travï¿½s del formulario de contacto.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        ¿Cuál es la duración mínima de la membresía?
+                        ï¿½Cuï¿½l es la duraciï¿½n mï¿½nima de la membresï¿½a?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Nuestras membresías mensuales no tienen permanencia mínima. Puedes cancelar
-                            en cualquier momento con un aviso de 30 días. También ofrecemos descuentos
+                            Nuestras membresï¿½as mensuales no tienen permanencia mï¿½nima. Puedes cancelar
+                            en cualquier momento con un aviso de 30 dï¿½as. Tambiï¿½n ofrecemos descuentos
                             para compromisos trimestrales o anuales.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        ¿Cómo funcionan las salas de reuniones?
+                        ï¿½Cï¿½mo funcionan las salas de reuniones?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Las salas de reuniones se reservan a través de nuestra app. Dependiendo de
+                            Las salas de reuniones se reservan a travï¿½s de nuestra app. Dependiendo de
                             tu plan, tienes horas incluidas mensualmente. Las horas adicionales se
-                            facturan a ¬15/hora. Todas las salas incluyen pantalla, pizarra y
+                            facturan a ï¿½15/hora. Todas las salas incluyen pantalla, pizarra y
                             videoconferencia.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        ¿Puedo recibir correo y paquetes en Cowok?
+                        ï¿½Puedo recibir correo y paquetes en Cowok?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Sí, todos los planes Flexible y Dedicado incluyen dirección fiscal y
-                            recepción de correo. Te notificamos cuando llega correspondencia y la
+                            Sï¿½, todos los planes Flexible y Dedicado incluyen direcciï¿½n fiscal y
+                            recepciï¿½n de correo. Te notificamos cuando llega correspondencia y la
                             guardamos de forma segura hasta que la recojas.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        ¿Hay parking disponible?
+                        ï¿½Hay parking disponible?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Contamos con parking subterráneo con plazas disponibles para miembros a
-                            un coste adicional. También hay un parking público a 2 minutos y estación
+                            Contamos con parking subterrï¿½neo con plazas disponibles para miembros a
+                            un coste adicional. Tambiï¿½n hay un parking pï¿½blico a 2 minutos y estaciï¿½n
                             de metro a 5 minutos caminando.
                         </p>
                     </div>
@@ -1554,7 +1756,7 @@
     <!-- CTA Section -->
     <section class="section cta" id="contacto">
         <div class="container">
-            <h2 class="cta__title">¿Listo para unirte a Cowok?</h2>
+            <h2 class="cta__title">ï¿½Listo para unirte a Cowok?</h2>
             <p class="cta__subtitle">
                 Agenda una visita gratuita y descubre el espacio donde tu productividad despega
             </p>
@@ -1572,8 +1774,8 @@
                 <div class="footer__brand">
                     <div class="footer__logo">Cow<span>ok</span></div>
                     <p class="footer__description">
-                        Espacios de trabajo diseñados para inspirar, conectar y potenciar tu
-                        productividad. Únete a nuestra comunidad de profesionales.
+                        Espacios de trabajo diseï¿½ados para inspirar, conectar y potenciar tu
+                        productividad. ï¿½nete a nuestra comunidad de profesionales.
                     </p>
                     <div class="footer__social">
                         <a href="#" class="footer__social-link" aria-label="Instagram">
@@ -1606,7 +1808,7 @@
                     <h4>Planes</h4>
                     <ul class="footer__links">
                         <li><a href="#" class="footer__link">Day Pass</a></li>
-                        <li><a href="#" class="footer__link">Membresía Flexible</a></li>
+                        <li><a href="#" class="footer__link">Membresï¿½a Flexible</a></li>
                         <li><a href="#" class="footer__link">Escritorio Dedicado</a></li>
                         <li><a href="#" class="footer__link">Oficina Privada</a></li>
                     </ul>
@@ -1622,10 +1824,10 @@
                 </div>
             </div>
             <div class="footer__bottom">
-                <p class="footer__copyright">© 2024 Cowok. Todos los derechos reservados.</p>
+                <p class="footer__copyright">ï¿½ 2024 Cowok. Todos los derechos reservados.</p>
                 <div class="footer__legal">
-                    <a href="#" class="footer__legal-link">Política de Privacidad</a>
-                    <a href="#" class="footer__legal-link">Términos y Condiciones</a>
+                    <a href="#" class="footer__legal-link">Polï¿½tica de Privacidad</a>
+                    <a href="#" class="footer__legal-link">Tï¿½rminos y Condiciones</a>
                     <a href="#" class="footer__legal-link">Cookies</a>
                 </div>
             </div>
@@ -1636,6 +1838,7 @@
     <script>
         // Header scroll effect
         const header = document.getElementById('header');
+        const headerWrapper = document.getElementById('headerWrapper');
         let lastScroll = 0;
 
         window.addEventListener('scroll', () => {
@@ -1643,8 +1846,10 @@
 
             if (currentScroll > 50) {
                 header.classList.add('header--scrolled');
+                headerWrapper.classList.add('header-wrapper--scrolled');
             } else {
                 header.classList.remove('header--scrolled');
+                headerWrapper.classList.remove('header-wrapper--scrolled');
             }
 
             lastScroll = currentScroll;
@@ -1725,6 +1930,25 @@
             el.style.transform = 'translateY(30px)';
             el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             observer.observe(el);
+        });
+
+        // Feature card item selection toggle
+        const featuresEmail = document.getElementById('featuresEmail');
+
+        function updateEmailVisibility() {
+            const selectedItems = document.querySelectorAll('.feature-card__item--selected');
+            if (selectedItems.length > 0) {
+                featuresEmail.classList.add('features-email--visible');
+            } else {
+                featuresEmail.classList.remove('features-email--visible');
+            }
+        }
+
+        document.querySelectorAll('.feature-card__item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('feature-card__item--selected');
+                updateEmailVisibility();
+            });
         });
     </script>
 </body>
