@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cowok | Coworking Space</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================
+           CSS VARIABLES & RESET
+           ============================================ */
+        :root {
+            --color-primary: #1a1a2e;
+            --color-secondary: #16213e;
+            --color-accent: #e94560;
+            --color-accent-hover: #d63d56;
+            --color-light: #f8f9fa;
+            --color-white: #ffffff;
+            --color-gray-100: #f7f7f7;
+            --color-gray-200: #e9ecef;
+            --color-gray-300: #dee2e6;
+            --color-gray-400: #ced4da;
+            --color-gray-500: #adb5bd;
+            --color-gray-600: #6c757d;
+            --color-gray-700: #495057;
+            --color-gray-800: #343a40;
+            --color-gray-900: #212529;
+            --color-success: #28a745;
+            --color-warm: #f4a261;
+
+            --font-primary: 'Inter', sans-serif;
+            --font-display: 'Playfair Display', serif;
+
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2rem;
+            --spacing-xl: 3rem;
+            --spacing-2xl: 4rem;
+            --spacing-3xl: 6rem;
+
+            --border-radius-sm: 4px;
+            --border-radius-md: 8px;
+            --border-radius-lg: 16px;
+            --border-radius-xl: 24px;
+
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 50px rgba(0,0,0,0.15);
+
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+
+            --container-max: 1200px;
+            --header-height: 80px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-primary);
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--color-gray-800);
+            background-color: var(--color-white);
+            overflow-x: hidden;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: color var(--transition-fast);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-family: inherit;
+        }
+
+        /* ============================================
+           UTILITY CLASSES
+           ============================================ */
+        .container {
+            width: 100%;
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        .section {
+            padding: var(--spacing-3xl) 0;
+        }
+
+        .section--gray {
+            background-color: var(--color-gray-100);
+        }
+
+        .section--dark {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-sm) var(--spacing-lg);
+            font-size: 0.95rem;
+            font-weight: 500;
+            border-radius: var(--border-radius-md);
+            transition: all var(--transition-fast);
+            gap: var(--spacing-xs);
+        }
+
+        .btn--primary {
+            background-color: var(--color-accent);
+            color: var(--color-white);
+        }
+
+        .btn--primary:hover {
+            background-color: var(--color-accent-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn--secondary {
+            background-color: var(--color-white);
+            color: var(--color-primary);
+            border: 2px solid var(--color-primary);
+        }
+
+        .btn--secondary:hover {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        .btn--outline {
+            background-color: transparent;
+            color: var(--color-white);
+            border: 2px solid var(--color-white);
+        }
+
+        .btn--outline:hover {
+            background-color: var(--color-white);
+            color: var(--color-primary);
+        }
+
+        .btn--large {
+            padding: var(--spacing-md) var(--spacing-xl);
+            font-size: 1.1rem;
+        }
+
+        /* ============================================
+           TYPOGRAPHY
+           ============================================ */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--font-display);
+            font-weight: 600;
+            line-height: 1.2;
+            color: var(--color-gray-900);
+        }
+
+        .section--dark h1,
+        .section--dark h2,
+        .section--dark h3 {
+            color: var(--color-white);
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+        }
+
+        h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: var(--spacing-md);
+        }
+
+        h3 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--color-gray-600);
+            max-width: 600px;
+            margin: 0 auto var(--spacing-xl);
+        }
+
+        .section--dark .section-subtitle {
+            color: var(--color-gray-300);
+        }
+
+        /* ============================================
+           HEADER & NAVIGATION
+           ============================================ */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: all var(--transition-normal);
+        }
+
+        .header--scrolled {
+            box-shadow: var(--shadow-md);
+        }
+
+        .header__container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .logo span {
+            color: var(--color-accent);
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+        }
+
+        .nav__list {
+            display: flex;
+            gap: var(--spacing-lg);
+        }
+
+        .nav__link {
+            font-weight: 500;
+            color: var(--color-gray-700);
+            position: relative;
+            padding: var(--spacing-xs) 0;
+        }
+
+        .nav__link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--color-accent);
+            transition: width var(--transition-fast);
+        }
+
+        .nav__link:hover {
+            color: var(--color-accent);
+        }
+
+        .nav__link:hover::after {
+            width: 100%;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            padding: var(--spacing-xs);
+            z-index: 1001;
+        }
+
+        .hamburger__line {
+            width: 25px;
+            height: 2px;
+            background-color: var(--color-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .hamburger--active .hamburger__line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger--active .hamburger__line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger--active .hamburger__line:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* Mobile Navigation */
+        .nav-mobile {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--color-white);
+            z-index: 999;
+            padding: calc(var(--header-height) + var(--spacing-xl)) var(--spacing-lg);
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+
+        .nav-mobile--active {
+            display: flex;
+        }
+
+        .nav-mobile__link {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--color-gray-800);
+            padding: var(--spacing-sm) 0;
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        /* ============================================
+           HERO SECTION
+           ============================================ */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            overflow: hidden;
+        }
+
+        .hero__bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.3;
+        }
+
+        .hero__content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            color: var(--color-white);
+            padding: calc(var(--header-height) + var(--spacing-xl)) 0;
+        }
+
+        .hero__badge {
+            display: inline-block;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background-color: rgba(233, 69, 96, 0.2);
+            border: 1px solid var(--color-accent);
+            border-radius: var(--border-radius-xl);
+            font-size: 0.85rem;
+            color: var(--color-accent);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .hero__title {
+            color: var(--color-white);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .hero__subtitle {
+            font-size: 1.25rem;
+            color: var(--color-gray-300);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.7;
+        }
+
+        .hero__buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        .hero__stats {
+            display: flex;
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-2xl);
+            padding-top: var(--spacing-xl);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .hero__stat {
+            text-align: center;
+        }
+
+        .hero__stat-number {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .hero__stat-label {
+            font-size: 0.9rem;
+            color: var(--color-gray-400);
+        }
+
+        /* ============================================
+           FEATURES SECTION
+           ============================================ */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .feature-card {
+            background-color: var(--color-white);
+            padding: var(--spacing-xl);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .feature-card__icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-warm) 100%);
+            border-radius: var(--border-radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .feature-card__icon svg {
+            width: 30px;
+            height: 30px;
+            stroke: var(--color-white);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .feature-card__title {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-gray-900);
+        }
+
+        .feature-card__description {
+            color: var(--color-gray-600);
+            font-size: 0.95rem;
+        }
+
+        /* ============================================
+           SPACES GALLERY
+           ============================================ */
+        .spaces__grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 300px);
+            gap: var(--spacing-md);
+        }
+
+        .space-card {
+            position: relative;
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .space-card:first-child {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .space-card__image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform var(--transition-slow);
+        }
+
+        .space-card:hover .space-card__image {
+            transform: scale(1.05);
+        }
+
+        .space-card__overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: var(--spacing-lg);
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            color: var(--color-white);
+            transform: translateY(100%);
+            transition: transform var(--transition-normal);
+        }
+
+        .space-card:hover .space-card__overlay {
+            transform: translateY(0);
+        }
+
+        .space-card__title {
+            font-size: 1.25rem;
+            margin-bottom: var(--spacing-xs);
+            color: var(--color-white);
+        }
+
+        .space-card__description {
+            font-size: 0.9rem;
+            color: var(--color-gray-300);
+        }
+
+        /* ============================================
+           PRICING SECTION
+           ============================================ */
+        .pricing__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background-color: var(--color-white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            transition: all var(--transition-normal);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .pricing-card--featured {
+            border: 2px solid var(--color-accent);
+        }
+
+        .pricing-card__badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--color-accent);
+            color: var(--color-white);
+            padding: var(--spacing-xs) var(--spacing-md);
+            border-radius: var(--border-radius-xl);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .pricing-card__name {
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-gray-900);
+        }
+
+        .pricing-card__description {
+            color: var(--color-gray-600);
+            margin-bottom: var(--spacing-lg);
+            font-size: 0.95rem;
+        }
+
+        .pricing-card__price {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .pricing-card__amount {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+        }
+
+        .pricing-card__currency {
+            font-size: 1.5rem;
+            vertical-align: super;
+        }
+
+        .pricing-card__period {
+            font-size: 1rem;
+            color: var(--color-gray-600);
+        }
+
+        .pricing-card__features {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .pricing-card__feature {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) 0;
+            color: var(--color-gray-700);
+            font-size: 0.95rem;
+        }
+
+        .pricing-card__feature svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--color-success);
+            flex-shrink: 0;
+        }
+
+        .pricing-card .btn {
+            width: 100%;
+        }
+
+        /* ============================================
+           TESTIMONIALS SECTION
+           ============================================ */
+        .testimonials__grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .testimonial-card {
+            background-color: var(--color-white);
+            padding: var(--spacing-xl);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-md);
+        }
+
+        .testimonial-card__quote {
+            font-size: 1.1rem;
+            color: var(--color-gray-700);
+            margin-bottom: var(--spacing-lg);
+            font-style: italic;
+            line-height: 1.8;
+        }
+
+        .testimonial-card__quote::before {
+            content: '"';
+            font-family: var(--font-display);
+            font-size: 3rem;
+            color: var(--color-accent);
+            line-height: 0;
+            vertical-align: -0.5em;
+            margin-right: var(--spacing-xs);
+        }
+
+        .testimonial-card__author {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .testimonial-card__avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .testimonial-card__name {
+            font-weight: 600;
+            color: var(--color-gray-900);
+        }
+
+        .testimonial-card__role {
+            font-size: 0.9rem;
+            color: var(--color-gray-600);
+        }
+
+        /* ============================================
+           FAQ SECTION
+           ============================================ */
+        .faq__list {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        .faq-item__question {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-lg) 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--color-gray-800);
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .faq-item__question:hover {
+            color: var(--color-accent);
+        }
+
+        .faq-item__icon {
+            width: 24px;
+            height: 24px;
+            stroke: currentColor;
+            transition: transform var(--transition-fast);
+        }
+
+        .faq-item--active .faq-item__icon {
+            transform: rotate(180deg);
+        }
+
+        .faq-item__answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-normal);
+        }
+
+        .faq-item--active .faq-item__answer {
+            max-height: 500px;
+        }
+
+        .faq-item__answer-content {
+            padding-bottom: var(--spacing-lg);
+            color: var(--color-gray-600);
+            line-height: 1.7;
+        }
+
+        /* ============================================
+           CTA SECTION
+           ============================================ */
+        .cta {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            text-align: center;
+        }
+
+        .cta__title {
+            color: var(--color-white);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .cta__subtitle {
+            color: var(--color-gray-300);
+            font-size: 1.1rem;
+            margin-bottom: var(--spacing-xl);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta__buttons {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            background-color: var(--color-gray-900);
+            color: var(--color-gray-300);
+            padding: var(--spacing-3xl) 0 var(--spacing-lg);
+        }
+
+        .footer__grid {
+            display: grid;
+            grid-template-columns: 2fr repeat(3, 1fr);
+            gap: var(--spacing-xl);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .footer__brand {
+            max-width: 300px;
+        }
+
+        .footer__logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-white);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .footer__logo span {
+            color: var(--color-accent);
+        }
+
+        .footer__description {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .footer__social {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+
+        .footer__social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .footer__social-link:hover {
+            background-color: var(--color-accent);
+        }
+
+        .footer__social-link svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--color-white);
+        }
+
+        .footer__column h4 {
+            color: var(--color-white);
+            font-size: 1.1rem;
+            margin-bottom: var(--spacing-md);
+            font-family: var(--font-primary);
+        }
+
+        .footer__links {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .footer__link {
+            font-size: 0.95rem;
+            transition: color var(--transition-fast);
+        }
+
+        .footer__link:hover {
+            color: var(--color-accent);
+        }
+
+        .footer__bottom {
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .footer__copyright {
+            font-size: 0.9rem;
+        }
+
+        .footer__legal {
+            display: flex;
+            gap: var(--spacing-lg);
+        }
+
+        .footer__legal-link {
+            font-size: 0.9rem;
+        }
+
+        .footer__legal-link:hover {
+            color: var(--color-accent);
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+           ============================================ */
+        @media (max-width: 1024px) {
+            .spaces__grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: auto;
+            }
+
+            .space-card:first-child {
+                grid-column: span 2;
+                grid-row: span 1;
+                height: 400px;
+            }
+
+            .space-card:not(:first-child) {
+                height: 250px;
+            }
+
+            .footer__grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .footer__brand {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --header-height: 70px;
+            }
+
+            .nav__list,
+            .nav .btn {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .hero__content {
+                padding: calc(var(--header-height) + var(--spacing-lg)) 0 var(--spacing-xl);
+            }
+
+            .hero__stats {
+                flex-direction: column;
+                gap: var(--spacing-lg);
+                align-items: flex-start;
+            }
+
+            .hero__stat {
+                text-align: left;
+            }
+
+            .hero__buttons {
+                flex-direction: column;
+            }
+
+            .hero__buttons .btn {
+                width: 100%;
+            }
+
+            .spaces__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .space-card:first-child {
+                grid-column: span 1;
+                height: 300px;
+            }
+
+            .space-card:not(:first-child) {
+                height: 200px;
+            }
+
+            .space-card__overlay {
+                transform: translateY(0);
+                background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+            }
+
+            .testimonials__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta__buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cta__buttons .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .footer__grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .footer__brand {
+                grid-column: span 1;
+                max-width: 100%;
+            }
+
+            .footer__social {
+                justify-content: center;
+            }
+
+            .footer__bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer__legal {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .section {
+                padding: var(--spacing-2xl) 0;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing__grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero__stat-number {
+                font-size: 2rem;
+            }
+
+            .pricing-card__amount {
+                font-size: 2.5rem;
+            }
+        }
+
+        /* ============================================
+           ANIMATIONS
+           ============================================ */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .animate-delay-1 { animation-delay: 0.1s; }
+        .animate-delay-2 { animation-delay: 0.2s; }
+        .animate-delay-3 { animation-delay: 0.3s; }
+        .animate-delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container header__container">
+            <a href="#" class="logo">Cow<span>ok</span></a>
+
+            <nav class="nav">
+                <ul class="nav__list">
+                    <li><a href="#espacios" class="nav__link">Espacios</a></li>
+                    <li><a href="#servicios" class="nav__link">Servicios</a></li>
+                    <li><a href="#precios" class="nav__link">Precios</a></li>
+                    <li><a href="#faq" class="nav__link">FAQ</a></li>
+                    <li><a href="#contacto" class="nav__link">Contacto</a></li>
+                </ul>
+                <a href="#precios" class="btn btn--primary">Reservar</a>
+            </nav>
+
+            <button class="hamburger" id="hamburger" aria-label="Menú">
+                <span class="hamburger__line"></span>
+                <span class="hamburger__line"></span>
+                <span class="hamburger__line"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation -->
+    <nav class="nav-mobile" id="navMobile">
+        <a href="#espacios" class="nav-mobile__link">Espacios</a>
+        <a href="#servicios" class="nav-mobile__link">Servicios</a>
+        <a href="#precios" class="nav-mobile__link">Precios</a>
+        <a href="#faq" class="nav-mobile__link">FAQ</a>
+        <a href="#contacto" class="nav-mobile__link">Contacto</a>
+        <a href="#precios" class="btn btn--primary btn--large">Reservar ahora</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero__bg"></div>
+        <div class="container">
+            <div class="hero__content">
+                <span class="hero__badge">( Nuevo espacio en el centro</span>
+                <h1 class="hero__title">Tu espacio de trabajo ideal</h1>
+                <p class="hero__subtitle">
+                    Cowok es más que un coworking. Es una comunidad de profesionales,
+                    emprendedores y creativos que buscan un lugar inspirador para trabajar,
+                    conectar y crecer.
+                </p>
+                <div class="hero__buttons">
+                    <a href="#precios" class="btn btn--primary btn--large">Empieza hoy</a>
+                    <a href="#espacios" class="btn btn--outline btn--large">Descubre los espacios</a>
+                </div>
+                <div class="hero__stats">
+                    <div class="hero__stat">
+                        <div class="hero__stat-number">500+</div>
+                        <div class="hero__stat-label">Miembros activos</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-number">24/7</div>
+                        <div class="hero__stat-label">Acceso disponible</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-number">15+</div>
+                        <div class="hero__stat-label">Salas de reuniones</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section" id="servicios">
+        <div class="container">
+            <div class="text-center">
+                <h2>Todo lo que necesitas</h2>
+                <p class="section-subtitle">
+                    Espacios diseñados para potenciar tu productividad y bienestar
+                </p>
+            </div>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-card__icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Internet ultrarrápido</h3>
+                    <p class="feature-card__description">
+                        Conexión de fibra óptica simétrica de 1Gbps para que trabajes sin interrupciones.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Comunidad activa</h3>
+                    <p class="feature-card__description">
+                        Eventos de networking, workshops y encuentros para conectar con otros profesionales.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+                            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+                            <line x1="6" y1="1" x2="6" y2="4"/>
+                            <line x1="10" y1="1" x2="10" y2="4"/>
+                            <line x1="14" y1="1" x2="14" y2="4"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Café & snacks</h3>
+                    <p class="feature-card__description">
+                        Café de especialidad, té premium y snacks saludables ilimitados durante todo el día.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="9" y1="21" x2="9" y2="9"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Salas de reuniones</h3>
+                    <p class="feature-card__description">
+                        Espacios privados equipados con pantallas, pizarras y videoconferencia para tus reuniones.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Acceso 24/7</h3>
+                    <p class="feature-card__description">
+                        Trabaja cuando quieras. Nuestro espacio está disponible las 24 horas, los 7 días.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-card__icon">
+                        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-card__title">Ubicación céntrica</h3>
+                    <p class="feature-card__description">
+                        En el corazón de la ciudad, con excelente conexión de transporte público.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spaces Gallery -->
+    <section class="section section--gray" id="espacios">
+        <div class="container">
+            <div class="text-center">
+                <h2>Nuestros espacios</h2>
+                <p class="section-subtitle">
+                    Diseñados para inspirar creatividad y maximizar la productividad
+                </p>
+            </div>
+            <div class="spaces__grid">
+                <div class="space-card">
+                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80" alt="Open Space" class="space-card__image">
+                    <div class="space-card__overlay">
+                        <h3 class="space-card__title">Open Space</h3>
+                        <p class="space-card__description">Espacio abierto con escritorios flexibles y ambiente colaborativo</p>
+                    </div>
+                </div>
+                <div class="space-card">
+                    <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80" alt="Oficinas Privadas" class="space-card__image">
+                    <div class="space-card__overlay">
+                        <h3 class="space-card__title">Oficinas Privadas</h3>
+                        <p class="space-card__description">Espacios cerrados para equipos de 2 a 10 personas</p>
+                    </div>
+                </div>
+                <div class="space-card">
+                    <img src="https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80" alt="Salas de Reuniones" class="space-card__image">
+                    <div class="space-card__overlay">
+                        <h3 class="space-card__title">Salas de Reuniones</h3>
+                        <p class="space-card__description">Equipadas con tecnología de última generación</p>
+                    </div>
+                </div>
+                <div class="space-card">
+                    <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=600&q=80" alt="Zona Lounge" class="space-card__image">
+                    <div class="space-card__overlay">
+                        <h3 class="space-card__title">Zona Lounge</h3>
+                        <p class="space-card__description">Área de descanso y networking informal</p>
+                    </div>
+                </div>
+                <div class="space-card">
+                    <img src="https://images.unsplash.com/photo-1600494603989-9650cf6ddd3d?auto=format&fit=crop&w=600&q=80" alt="Phone Booths" class="space-card__image">
+                    <div class="space-card__overlay">
+                        <h3 class="space-card__title">Phone Booths</h3>
+                        <p class="space-card__description">Cabinas insonorizadas para llamadas privadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="section" id="precios">
+        <div class="container">
+            <div class="text-center">
+                <h2>Planes flexibles</h2>
+                <p class="section-subtitle">
+                    Elige el plan que mejor se adapte a tu forma de trabajar
+                </p>
+            </div>
+            <div class="pricing__grid">
+                <div class="pricing-card">
+                    <h3 class="pricing-card__name">Day Pass</h3>
+                    <p class="pricing-card__description">Perfecto para probar el espacio o trabajo ocasional</p>
+                    <div class="pricing-card__price">
+                        <span class="pricing-card__currency">¬</span>
+                        <span class="pricing-card__amount">25</span>
+                        <span class="pricing-card__period">/día</span>
+                    </div>
+                    <ul class="pricing-card__features">
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Acceso al open space
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            WiFi de alta velocidad
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Café y snacks incluidos
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Horario: 9:00 - 19:00
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="btn btn--secondary">Reservar día</a>
+                </div>
+                <div class="pricing-card pricing-card--featured">
+                    <span class="pricing-card__badge">Más popular</span>
+                    <h3 class="pricing-card__name">Flexible</h3>
+                    <p class="pricing-card__description">Para profesionales que buscan flexibilidad total</p>
+                    <div class="pricing-card__price">
+                        <span class="pricing-card__currency">¬</span>
+                        <span class="pricing-card__amount">199</span>
+                        <span class="pricing-card__period">/mes</span>
+                    </div>
+                    <ul class="pricing-card__features">
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Acceso 24/7
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Escritorio flexible
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            4h salas de reunión/mes
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Eventos de networking
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Dirección fiscal
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="btn btn--primary">Empezar ahora</a>
+                </div>
+                <div class="pricing-card">
+                    <h3 class="pricing-card__name">Dedicado</h3>
+                    <p class="pricing-card__description">Tu escritorio fijo con todas las comodidades</p>
+                    <div class="pricing-card__price">
+                        <span class="pricing-card__currency">¬</span>
+                        <span class="pricing-card__amount">349</span>
+                        <span class="pricing-card__period">/mes</span>
+                    </div>
+                    <ul class="pricing-card__features">
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Escritorio fijo personal
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Acceso 24/7
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            10h salas de reunión/mes
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Almacenamiento personal
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Impresiones incluidas
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="btn btn--secondary">Contactar</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="section section--gray">
+        <div class="container">
+            <div class="text-center">
+                <h2>Lo que dicen nuestros miembros</h2>
+                <p class="section-subtitle">
+                    Más de 500 profesionales ya confían en Cowok
+                </p>
+            </div>
+            <div class="testimonials__grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-card__quote">
+                        Cowok ha transformado mi forma de trabajar. El ambiente es increíble y la comunidad
+                        me ha ayudado a hacer conexiones muy valiosas para mi negocio.
+                    </p>
+                    <div class="testimonial-card__author">
+                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="María García" class="testimonial-card__avatar">
+                        <div>
+                            <div class="testimonial-card__name">María García</div>
+                            <div class="testimonial-card__role">Fundadora, DesignLab</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-card__quote">
+                        Después de probar varios coworkings, Cowok es el único donde me siento realmente
+                        productivo. La calidad de los espacios y servicios es excepcional.
+                    </p>
+                    <div class="testimonial-card__author">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Carlos Ruiz" class="testimonial-card__avatar">
+                        <div>
+                            <div class="testimonial-card__name">Carlos Ruiz</div>
+                            <div class="testimonial-card__role">Desarrollador Freelance</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-card__quote">
+                        Mi startup creció aquí. Los eventos de networking y la comunidad fueron clave
+                        para encontrar a mis primeros clientes y socios.
+                    </p>
+                    <div class="testimonial-card__author">
+                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Ana Martínez" class="testimonial-card__avatar">
+                        <div>
+                            <div class="testimonial-card__name">Ana Martínez</div>
+                            <div class="testimonial-card__role">CEO, TechStart</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="section" id="faq">
+        <div class="container">
+            <div class="text-center">
+                <h2>Preguntas frecuentes</h2>
+                <p class="section-subtitle">
+                    Todo lo que necesitas saber sobre Cowok
+                </p>
+            </div>
+            <div class="faq__list">
+                <div class="faq-item">
+                    <button class="faq-item__question">
+                        ¿Puedo probar el espacio antes de comprometerme?
+                        <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="faq-item__answer">
+                        <p class="faq-item__answer-content">
+                            ¡Por supuesto! Ofrecemos un día de prueba gratuito para que puedas experimentar
+                            nuestro espacio y comunidad. También puedes comprar un Day Pass sin compromiso.
+                            Agenda tu visita a través del formulario de contacto.
+                        </p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__question">
+                        ¿Cuál es la duración mínima de la membresía?
+                        <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="faq-item__answer">
+                        <p class="faq-item__answer-content">
+                            Nuestras membresías mensuales no tienen permanencia mínima. Puedes cancelar
+                            en cualquier momento con un aviso de 30 días. También ofrecemos descuentos
+                            para compromisos trimestrales o anuales.
+                        </p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__question">
+                        ¿Cómo funcionan las salas de reuniones?
+                        <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="faq-item__answer">
+                        <p class="faq-item__answer-content">
+                            Las salas de reuniones se reservan a través de nuestra app. Dependiendo de
+                            tu plan, tienes horas incluidas mensualmente. Las horas adicionales se
+                            facturan a ¬15/hora. Todas las salas incluyen pantalla, pizarra y
+                            videoconferencia.
+                        </p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__question">
+                        ¿Puedo recibir correo y paquetes en Cowok?
+                        <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="faq-item__answer">
+                        <p class="faq-item__answer-content">
+                            Sí, todos los planes Flexible y Dedicado incluyen dirección fiscal y
+                            recepción de correo. Te notificamos cuando llega correspondencia y la
+                            guardamos de forma segura hasta que la recojas.
+                        </p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-item__question">
+                        ¿Hay parking disponible?
+                        <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="faq-item__answer">
+                        <p class="faq-item__answer-content">
+                            Contamos con parking subterráneo con plazas disponibles para miembros a
+                            un coste adicional. También hay un parking público a 2 minutos y estación
+                            de metro a 5 minutos caminando.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="section cta" id="contacto">
+        <div class="container">
+            <h2 class="cta__title">¿Listo para unirte a Cowok?</h2>
+            <p class="cta__subtitle">
+                Agenda una visita gratuita y descubre el espacio donde tu productividad despega
+            </p>
+            <div class="cta__buttons">
+                <a href="mailto:hola@cowok.com" class="btn btn--primary btn--large">Agendar visita</a>
+                <a href="tel:+34900123456" class="btn btn--outline btn--large">Llamar ahora</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer__grid">
+                <div class="footer__brand">
+                    <div class="footer__logo">Cow<span>ok</span></div>
+                    <p class="footer__description">
+                        Espacios de trabajo diseñados para inspirar, conectar y potenciar tu
+                        productividad. Únete a nuestra comunidad de profesionales.
+                    </p>
+                    <div class="footer__social">
+                        <a href="#" class="footer__social-link" aria-label="Instagram">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="footer__social-link" aria-label="LinkedIn">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="footer__social-link" aria-label="Twitter">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="footer__column">
+                    <h4>Espacios</h4>
+                    <ul class="footer__links">
+                        <li><a href="#" class="footer__link">Open Space</a></li>
+                        <li><a href="#" class="footer__link">Oficinas Privadas</a></li>
+                        <li><a href="#" class="footer__link">Salas de Reuniones</a></li>
+                        <li><a href="#" class="footer__link">Zona Lounge</a></li>
+                    </ul>
+                </div>
+                <div class="footer__column">
+                    <h4>Planes</h4>
+                    <ul class="footer__links">
+                        <li><a href="#" class="footer__link">Day Pass</a></li>
+                        <li><a href="#" class="footer__link">Membresía Flexible</a></li>
+                        <li><a href="#" class="footer__link">Escritorio Dedicado</a></li>
+                        <li><a href="#" class="footer__link">Oficina Privada</a></li>
+                    </ul>
+                </div>
+                <div class="footer__column">
+                    <h4>Contacto</h4>
+                    <ul class="footer__links">
+                        <li><a href="mailto:hola@cowok.com" class="footer__link">hola@cowok.com</a></li>
+                        <li><a href="tel:+34900123456" class="footer__link">+34 900 123 456</a></li>
+                        <li><a href="#" class="footer__link">Calle Principal 123</a></li>
+                        <li><a href="#" class="footer__link">28001 Madrid</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer__bottom">
+                <p class="footer__copyright">© 2024 Cowok. Todos los derechos reservados.</p>
+                <div class="footer__legal">
+                    <a href="#" class="footer__legal-link">Política de Privacidad</a>
+                    <a href="#" class="footer__legal-link">Términos y Condiciones</a>
+                    <a href="#" class="footer__legal-link">Cookies</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Header scroll effect
+        const header = document.getElementById('header');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 50) {
+                header.classList.add('header--scrolled');
+            } else {
+                header.classList.remove('header--scrolled');
+            }
+
+            lastScroll = currentScroll;
+        });
+
+        // Mobile menu toggle
+        const hamburger = document.getElementById('hamburger');
+        const navMobile = document.getElementById('navMobile');
+
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('hamburger--active');
+            navMobile.classList.toggle('nav-mobile--active');
+            document.body.style.overflow = navMobile.classList.contains('nav-mobile--active') ? 'hidden' : '';
+        });
+
+        // Close mobile menu when clicking a link
+        document.querySelectorAll('.nav-mobile__link').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('hamburger--active');
+                navMobile.classList.remove('nav-mobile--active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // FAQ accordion
+        document.querySelectorAll('.faq-item__question').forEach(question => {
+            question.addEventListener('click', () => {
+                const faqItem = question.parentElement;
+                const isActive = faqItem.classList.contains('faq-item--active');
+
+                // Close all FAQ items
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('faq-item--active');
+                });
+
+                // Open clicked item if it wasn't active
+                if (!isActive) {
+                    faqItem.classList.add('faq-item--active');
+                }
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    const headerHeight = header.offsetHeight;
+                    const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Intersection Observer for animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.querySelectorAll('.feature-card, .pricing-card, .testimonial-card, .space-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
