@@ -419,9 +419,31 @@
             margin-right: auto;
         }
 
+        .hero__main {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xl);
+        }
+
+        .hero__text-wrapper {
+            flex: 1;
+            width: 100%;
+            background-image: url('https://www.bunnoestudio.com/wp-content/uploads/2025/10/como-debe-ser-el-mobiliario-de-una-oficina.jpg');
+            background-size: contain;
+            background-position: calc(100% + 100px) center;
+            background-repeat: no-repeat;
+        }
+
+        .hero__text {
+            max-width: 900px;
+            background-color: #1C2134;
+            clip-path: polygon(-5px -5px, 100% -5px, 85% calc(100% + 5px), -5px calc(100% + 5px));
+            padding-right: 100px;
+        }
+
         .hero__title {
             color: var(--color-white);
-            margin-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
         }
 
         .hero__subtitle {
@@ -429,13 +451,22 @@
             color: var(--color-gray-300);
             margin-bottom: var(--spacing-xl);
             line-height: 1.7;
-            max-width: 700px;
         }
 
         .hero__buttons {
             display: flex;
             gap: var(--spacing-md);
             flex-wrap: wrap;
+        }
+
+        .hero__image {
+            display: none;
+        }
+
+        .hero__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .hero__cta {
@@ -1086,6 +1117,38 @@
         /* ============================================
            RESPONSIVE DESIGN
            ============================================ */
+        @media (max-width: 1100px) {
+            .hero__text-wrapper {
+                background-image: none;
+            }
+
+            .hero__text {
+                clip-path: none;
+                padding-left: 60px;
+                padding-right: 60px;
+                max-width: 100%;
+                text-align: center;
+            }
+
+            .hero__buttons {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .hero__text {
+                padding-left: 40px;
+                padding-right: 40px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .hero__text {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+
         @media (max-width: 1024px) {
             .spaces__grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -1152,6 +1215,16 @@
 
             .hero__cta-text {
                 font-size: 1.2rem;
+            }
+
+            .hero__main {
+                flex-direction: column;
+            }
+
+            .hero__text {
+                max-width: 100%;
+                clip-path: none;
+                padding-right: 0;
             }
 
             .hero__buttons {
@@ -1312,13 +1385,22 @@
         <div class="container">
             <div class="hero__content">
                 <span class="hero__badge">Nuevo Cowok Cervantes!</span>
-                <h1 class="hero__title">Tu espacio de trabajo ideal</h1>
-                <p class="hero__subtitle">
-                    Cowok es un lienzo en blanco. Creamos coworkings adaptados a los trabajadores, intentando que lo que pagan se reinvierta en sus necesidades a medida que se desarrolla cada proyecto. Además, intentamos crear sinergias con los negocios adyacentes para conseguir beneficios para los asistentes, como por ejemplo comidas o gimnasio.
-                </p>
-                <div class="hero__buttons">
-                    <a href="#contacto" class="btn btn--primary btn--large">Lista de espera</a>
-                    <a href="#contacto" class="btn btn--outline btn--large">Contáctanos!</a>
+                <div class="hero__main">
+                    <div class="hero__text-wrapper">
+                        <div class="hero__text">
+                            <h1 class="hero__title">Tu espacio de trabajo ideal</h1>
+                            <p class="hero__subtitle">
+                                Cowok es un lienzo en blanco. Creamos coworkings adaptados a los trabajadores, intentando que lo que pagan se reinvierta en sus necesidades a medida que se desarrolla cada proyecto. Además, intentamos crear sinergias con los negocios adyacentes para conseguir beneficios para los asistentes, como por ejemplo comidas o gimnasio.
+                            </p>
+                            <div class="hero__buttons">
+                                <a href="#contacto" class="btn btn--primary btn--large">Lista de espera</a>
+                                <a href="#contacto" class="btn btn--outline btn--large">Contáctanos!</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero__image" style="border: 5px solid #1C2134;">
+                        <img src="https://www.bunnoestudio.com/wp-content/uploads/2025/10/como-debe-ser-el-mobiliario-de-una-oficina.jpg" alt="Oficina moderna">
+                    </div>
                 </div>
                 <div class="hero__cta">
                     <p class="hero__cta-text">Cowok Cervantes - Diseñalo tu mismo!</p>
