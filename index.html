@@ -629,6 +629,24 @@
             border-radius: 50%;
         }
 
+        .feature-card__item--has-subitems::before {
+            top: 12px;
+            transform: none;
+        }
+
+        .feature-card__item--has-subitems.feature-card__item--selected::after {
+            top: 16px;
+            transform: none;
+        }
+
+        .feature-card__item-subitems {
+            margin-top: 4px;
+            margin-left: -5px;
+            font-size: 0.7rem;
+            color: var(--color-gray-500);
+            line-height: 1.4;
+        }
+
         .features-email {
             max-height: 0;
             overflow: hidden;
@@ -1519,7 +1537,13 @@
                     <div class="feature-card__list">
                         <div class="feature-card__item">Instalaciones deportivas</div>
                         <div class="feature-card__item">Zonas de descanso</div>
-                        <div class="feature-card__item">Actividades y networking</div>
+                        <div class="feature-card__item feature-card__item--has-subitems">
+                            Virtual Office
+                            <div class="feature-card__item-subitems">
+                                - Domicilio fiscal/legal pyme<br>
+                                - Recepción de correspondencia
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1791,76 +1815,76 @@
             <div class="faq__list">
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        �Puedo probar el espacio antes de comprometerme?
+                        ¿Puedo probar el espacio antes de comprometerme?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            �Por supuesto! Ofrecemos un d�a de prueba gratuito para que puedas experimentar
-                            nuestro espacio y comunidad. Tambi�n puedes comprar un Day Pass sin compromiso.
-                            Agenda tu visita a trav�s del formulario de contacto.
+                            ¡Por supuesto! Ofrecemos un día de prueba gratuito para que puedas experimentar
+                            nuestro espacio y comunidad. También puedes comprar un Day Pass sin compromiso.
+                            Agenda tu visita a través del formulario de contacto.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        �Cu�l es la duraci�n m�nima de la membres�a?
+                        ¿Cuál es la duración mínima de la membresía?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Nuestras membres�as mensuales no tienen permanencia m�nima. Puedes cancelar
-                            en cualquier momento con un aviso de 30 d�as. Tambi�n ofrecemos descuentos
+                            Nuestras membresías mensuales no tienen permanencia mínima. Puedes cancelar
+                            en cualquier momento con un aviso de 30 días. También ofrecemos descuentos
                             para compromisos trimestrales o anuales.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        �C�mo funcionan las salas de reuniones?
+                        ¿Cómo funcionan las salas de reuniones?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Las salas de reuniones se reservan a trav�s de nuestra app. Dependiendo de
+                            Las salas de reuniones se reservan a través de nuestra app. Dependiendo de
                             tu plan, tienes horas incluidas mensualmente. Las horas adicionales se
-                            facturan a �15/hora. Todas las salas incluyen pantalla, pizarra y
+                            facturan a 15€/hora. Todas las salas incluyen pantalla, pizarra y
                             videoconferencia.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        �Puedo recibir correo y paquetes en Cowok?
+                        ¿Puedo recibir correo y paquetes en Cowok?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            S�, todos los planes Flexible y Dedicado incluyen direcci�n fiscal y
-                            recepci�n de correo. Te notificamos cuando llega correspondencia y la
+                            Sí, todos los planes Flexible y Dedicado incluyen dirección fiscal y
+                            recepción de correo. Te notificamos cuando llega correspondencia y la
                             guardamos de forma segura hasta que la recojas.
                         </p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-item__question">
-                        �Hay parking disponible?
+                        ¿Hay parking disponible?
                         <svg class="faq-item__icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
                         </svg>
                     </button>
                     <div class="faq-item__answer">
                         <p class="faq-item__answer-content">
-                            Contamos con parking subterr�neo con plazas disponibles para miembros a
-                            un coste adicional. Tambi�n hay un parking p�blico a 2 minutos y estaci�n
+                            Contamos con parking subterráneo con plazas disponibles para miembros a
+                            un coste adicional. También hay un parking público a 2 minutos y estación
                             de metro a 5 minutos caminando.
                         </p>
                     </div>
@@ -1872,7 +1896,7 @@
     <!-- CTA Section -->
     <section class="section cta" id="contacto">
         <div class="container">
-            <h2 class="cta__title">�Listo para unirte a Cowok?</h2>
+            <h2 class="cta__title">¿Listo para unirte a Cowok?</h2>
             <p class="cta__subtitle">
                 Agenda una visita gratuita y descubre el espacio donde tu productividad despega
             </p>
