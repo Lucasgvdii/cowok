@@ -791,13 +791,30 @@
             margin: 0 auto;
         }
 
+        .pricing__grid--4 {
+            grid-template-columns: repeat(4, 1fr);
+            max-width: 1200px;
+        }
+
+        .pricing-card__note {
+            font-size: 0.8rem;
+            color: var(--color-gray-500);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background-color: var(--color-gray-100);
+            border-radius: var(--border-radius-sm);
+            text-align: center;
+        }
+
         .pricing-card {
             background-color: var(--color-white);
             border-radius: var(--border-radius-lg);
-            padding: var(--spacing-xl);
+            padding: var(--spacing-xl) var(--spacing-md);
             box-shadow: var(--shadow-md);
             position: relative;
             transition: all var(--transition-normal);
+            display: flex;
+            flex-direction: column;
         }
 
         .pricing-card:hover {
@@ -822,41 +839,49 @@
             font-weight: 500;
         }
 
-        .pricing-card__name {
-            font-size: 1.5rem;
+        .pricing-card__header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
             margin-bottom: var(--spacing-sm);
+        }
+
+        .pricing-card__name {
+            font-size: 1.3rem;
             color: var(--color-gray-900);
+        }
+
+        .pricing-card__price {
+            font-family: Arial, sans-serif;
+            font-weight: 500;
+            color: var(--color-gray-900);
+            white-space: nowrap;
+        }
+
+        .pricing-card__amount {
+            font-size: 1.4rem;
+        }
+
+        .pricing-card__currency {
+            font-size: 1rem;
+        }
+
+        .pricing-card__period {
+            font-size: 0.85rem;
+            color: var(--color-gray-600);
+            font-weight: 400;
         }
 
         .pricing-card__description {
             color: var(--color-gray-600);
-            margin-bottom: var(--spacing-lg);
-            font-size: 0.95rem;
-        }
-
-        .pricing-card__price {
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .pricing-card__amount {
-            font-family: var(--font-display);
-            font-size: 3rem;
-            font-weight: 700;
-            color: var(--color-gray-900);
-        }
-
-        .pricing-card__currency {
-            font-size: 1.5rem;
-            vertical-align: super;
-        }
-
-        .pricing-card__period {
-            font-size: 1rem;
+            margin-bottom: var(--spacing-md);
+            font-size: 0.9rem;
             color: var(--color-gray-600);
         }
 
         .pricing-card__features {
             margin-bottom: var(--spacing-lg);
+            flex-grow: 1;
         }
 
         .pricing-card__feature {
@@ -1180,6 +1205,10 @@
         }
 
         @media (max-width: 1024px) {
+            .pricing__grid--4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
             .spaces__grid {
                 grid-template-columns: repeat(2, 1fr);
                 grid-template-rows: auto;
@@ -1265,6 +1294,10 @@
             .features-email__submit {
                 width: 100%;
                 height: 44px;
+            }
+
+            .pricing__grid--4 {
+                grid-template-columns: 1fr;
             }
 
             .hero__main {
@@ -1404,13 +1437,12 @@
 
                 <nav class="nav">
                     <ul class="nav__list">
-                        <li><a href="#espacios" class="nav__link">Espacios</a></li>
                         <li><a href="#servicios" class="nav__link">Servicios</a></li>
                         <li><a href="#precios" class="nav__link">Precios</a></li>
                         <li><a href="#faq" class="nav__link">FAQ</a></li>
                         <li><a href="#contacto" class="nav__link">Contacto</a></li>
                     </ul>
-                    <a href="#precios" class="btn btn--primary">Reservar</a>
+                    <a href="#precios" class="btn btn--primary">Lista de espera</a>
                 </nav>
 
                 <button class="hamburger" id="hamburger" aria-label="Menú">
@@ -1455,7 +1487,7 @@
                     </div>
                 </div>
                 <div class="hero__cta">
-                    <p class="hero__cta-text">Cowok Cervantes - Diseñalo tu mismo!</p>
+                    <p class="hero__cta-text">Cowok Cervantes - ¡Diséñalo tú mismo!</p>
                     <a href="#servicios" class="hero__scroll-arrow" aria-label="Ir a siguiente sección">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"/>
@@ -1489,7 +1521,7 @@
                         <div class="feature-card__item">Internet de alta velocidad</div>
                         <div class="feature-card__item">Pantalla</div>
                         <div class="feature-card__item">Escritorio elevable</div>
-                        <div class="feature-card__item">Silla Ergonómica</div>
+                        <div class="feature-card__item">Silla ergonómica</div>
                     </div>
                 </div>
                 <div class="feature-card">
@@ -1504,9 +1536,9 @@
                     <h3 class="feature-card__title">Cowork Confort</h3>
                     <div class="feature-card__list">
                         <div class="feature-card__item">Salas de reuniones</div>
-                        <div class="feature-card__item">Silence Booth</div>
-                        <div class="feature-card__item">Escritorio fijo</div>
-                        <div class="feature-card__item">Almacenamiento Personal</div>
+                        <div class="feature-card__item">Cabinas insonorizadas</div>
+                        <div class="feature-card__item">Escritorio propio fijo</div>
+                        <div class="feature-card__item">Almacenamiento personal</div>
                     </div>
                 </div>
                 <div class="feature-card">
@@ -1521,7 +1553,7 @@
                     </div>
                     <h3 class="feature-card__title">Food Confort</h3>
                     <div class="feature-card__list">
-                        <div class="feature-card__item">Café & Té</div>
+                        <div class="feature-card__item">Café y té</div>
                         <div class="feature-card__item">Desayunos</div>
                         <div class="feature-card__item">Comidas</div>
                         <div class="feature-card__item">Cenas</div>
@@ -1538,7 +1570,7 @@
                         <div class="feature-card__item">Instalaciones deportivas</div>
                         <div class="feature-card__item">Zonas de descanso</div>
                         <div class="feature-card__item feature-card__item--has-subitems">
-                            Virtual Office
+                            Virtual office
                             <div class="feature-card__item-subitems">
                                 - Domicilio fiscal/legal pyme<br>
                                 - Recepción de correspondencia
@@ -1566,57 +1598,8 @@
         </div>
     </section>
 
-    <!-- Spaces Gallery -->
-    <section class="section section--gray" id="espacios">
-        <div class="container">
-            <div class="text-center">
-                <h2>Nuestros espacios</h2>
-                <p class="section-subtitle">
-                    Dise�ados para inspirar creatividad y maximizar la productividad
-                </p>
-            </div>
-            <div class="spaces__grid">
-                <div class="space-card">
-                    <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80" alt="Open Space" class="space-card__image">
-                    <div class="space-card__overlay">
-                        <h3 class="space-card__title">Open Space</h3>
-                        <p class="space-card__description">Espacio abierto con escritorios flexibles y ambiente colaborativo</p>
-                    </div>
-                </div>
-                <div class="space-card">
-                    <img src="https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80" alt="Oficinas Privadas" class="space-card__image">
-                    <div class="space-card__overlay">
-                        <h3 class="space-card__title">Oficinas Privadas</h3>
-                        <p class="space-card__description">Espacios cerrados para equipos de 2 a 10 personas</p>
-                    </div>
-                </div>
-                <div class="space-card">
-                    <img src="https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=600&q=80" alt="Salas de Reuniones" class="space-card__image">
-                    <div class="space-card__overlay">
-                        <h3 class="space-card__title">Salas de Reuniones</h3>
-                        <p class="space-card__description">Equipadas con tecnolog�a de �ltima generaci�n</p>
-                    </div>
-                </div>
-                <div class="space-card">
-                    <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=600&q=80" alt="Zona Lounge" class="space-card__image">
-                    <div class="space-card__overlay">
-                        <h3 class="space-card__title">Zona Lounge</h3>
-                        <p class="space-card__description">�rea de descanso y networking informal</p>
-                    </div>
-                </div>
-                <div class="space-card">
-                    <img src="https://images.unsplash.com/photo-1600494603989-9650cf6ddd3d?auto=format&fit=crop&w=600&q=80" alt="Phone Booths" class="space-card__image">
-                    <div class="space-card__overlay">
-                        <h3 class="space-card__title">Phone Booths</h3>
-                        <p class="space-card__description">Cabinas insonorizadas para llamadas privadas</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Pricing Section -->
-    <section class="section" id="precios">
+    <section class="section section--gray" id="precios">
         <div class="container">
             <div class="text-center">
                 <h2>Planes flexibles</h2>
@@ -1624,15 +1607,15 @@
                     Elige el plan que mejor se adapte a tu forma de trabajar
                 </p>
             </div>
-            <div class="pricing__grid">
+            <div class="pricing__grid pricing__grid--4">
                 <div class="pricing-card">
-                    <h3 class="pricing-card__name">Day Pass</h3>
-                    <p class="pricing-card__description">Perfecto para probar el espacio o trabajo ocasional</p>
-                    <div class="pricing-card__price">
-                        <span class="pricing-card__currency">�</span>
-                        <span class="pricing-card__amount">25</span>
-                        <span class="pricing-card__period">/d�a</span>
+                    <div class="pricing-card__header">
+                        <h3 class="pricing-card__name">Day Pass</h3>
+                        <div class="pricing-card__price">
+                            <span class="pricing-card__currency">€</span><span class="pricing-card__amount">25</span><span class="pricing-card__period">/día</span>
+                        </div>
                     </div>
+                    <p class="pricing-card__description">Perfecto para probar el espacio o trabajo ocasional</p>
                     <ul class="pricing-card__features">
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1650,74 +1633,57 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            Caf� y snacks incluidos
-                        </li>
-                        <li class="pricing-card__feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Horario: 9:00 - 19:00
+                            Café y snacks incluidos
                         </li>
                     </ul>
-                    <a href="#contacto" class="btn btn--secondary">Reservar d�a</a>
-                </div>
-                <div class="pricing-card pricing-card--featured">
-                    <span class="pricing-card__badge">M�s popular</span>
-                    <h3 class="pricing-card__name">Flexible</h3>
-                    <p class="pricing-card__description">Para profesionales que buscan flexibilidad total</p>
-                    <div class="pricing-card__price">
-                        <span class="pricing-card__currency">�</span>
-                        <span class="pricing-card__amount">199</span>
-                        <span class="pricing-card__period">/mes</span>
-                    </div>
-                    <ul class="pricing-card__features">
-                        <li class="pricing-card__feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Acceso 24/7
-                        </li>
-                        <li class="pricing-card__feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Escritorio flexible
-                        </li>
-                        <li class="pricing-card__feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            4h salas de reuni�n/mes
-                        </li>
-                        <li class="pricing-card__feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Eventos de networking
-                        </li>
-                        <li class="pricing-card__feature">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="20 6 9 17 4 12"/>
-                            </svg>
-                            Direcci�n fiscal
-                        </li>
-                    </ul>
-                    <a href="#contacto" class="btn btn--primary">Empezar ahora</a>
+                    <p class="pricing-card__note">Bono 10 días: 15% dto. (válido 4 meses, menor prioridad)</p>
+                    <a href="#contacto" class="btn btn--secondary">Lista de espera</a>
                 </div>
                 <div class="pricing-card">
-                    <h3 class="pricing-card__name">Dedicado</h3>
-                    <p class="pricing-card__description">Tu escritorio fijo con todas las comodidades</p>
-                    <div class="pricing-card__price">
-                        <span class="pricing-card__currency">�</span>
-                        <span class="pricing-card__amount">349</span>
-                        <span class="pricing-card__period">/mes</span>
+                    <div class="pricing-card__header">
+                        <h3 class="pricing-card__name">Casual</h3>
+                        <div class="pricing-card__price">
+                            <span class="pricing-card__currency">€</span><span class="pricing-card__amount">100</span><span class="pricing-card__period">/mes</span>
+                        </div>
                     </div>
+                    <p class="pricing-card__description">Para quienes necesitan flexibilidad semanal</p>
                     <ul class="pricing-card__features">
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            Escritorio fijo personal
+                            3 días a la semana
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Horario: 8:00 - 17:30
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            6h salas de reunión/mes
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="btn btn--secondary">Lista de espera</a>
+                </div>
+                <div class="pricing-card pricing-card--featured">
+                    <span class="pricing-card__badge">Más popular</span>
+                    <div class="pricing-card__header">
+                        <h3 class="pricing-card__name">Asiduo</h3>
+                        <div class="pricing-card__price">
+                            <span class="pricing-card__currency">€</span><span class="pricing-card__amount">120</span><span class="pricing-card__period">/mes</span>
+                        </div>
+                    </div>
+                    <p class="pricing-card__description">Acceso completo para profesionales comprometidos</p>
+                    <ul class="pricing-card__features">
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Todos los días
                         </li>
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1729,7 +1695,37 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            10h salas de reuni�n/mes
+                            10h salas de reunión/mes
+                        </li>
+                    </ul>
+                    <a href="#contacto" class="btn btn--primary">Lista de espera</a>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-card__header">
+                        <h3 class="pricing-card__name">Fijo</h3>
+                        <div class="pricing-card__price">
+                            <span class="pricing-card__currency">€</span><span class="pricing-card__amount">150</span><span class="pricing-card__period">/mes</span>
+                        </div>
+                    </div>
+                    <p class="pricing-card__description">Tu espacio personal con todas las comodidades</p>
+                    <ul class="pricing-card__features">
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Todos los días
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Escritorio fijo elevable
+                        </li>
+                        <li class="pricing-card__feature">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            Acceso 24/7
                         </li>
                         <li class="pricing-card__feature">
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1741,63 +1737,10 @@
                             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
-                            Impresiones incluidas
+                            20h salas de reunión/mes
                         </li>
                     </ul>
-                    <a href="#contacto" class="btn btn--secondary">Contactar</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Testimonials Section -->
-    <section class="section section--gray">
-        <div class="container">
-            <div class="text-center">
-                <h2>Lo que dicen nuestros miembros</h2>
-                <p class="section-subtitle">
-                    M�s de 500 profesionales ya conf�an en Cowok
-                </p>
-            </div>
-            <div class="testimonials__grid">
-                <div class="testimonial-card">
-                    <p class="testimonial-card__quote">
-                        Cowok ha transformado mi forma de trabajar. El ambiente es incre�ble y la comunidad
-                        me ha ayudado a hacer conexiones muy valiosas para mi negocio.
-                    </p>
-                    <div class="testimonial-card__author">
-                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Mar�a Garc�a" class="testimonial-card__avatar">
-                        <div>
-                            <div class="testimonial-card__name">Mar�a Garc�a</div>
-                            <div class="testimonial-card__role">Fundadora, DesignLab</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <p class="testimonial-card__quote">
-                        Despu�s de probar varios coworkings, Cowok es el �nico donde me siento realmente
-                        productivo. La calidad de los espacios y servicios es excepcional.
-                    </p>
-                    <div class="testimonial-card__author">
-                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Carlos Ruiz" class="testimonial-card__avatar">
-                        <div>
-                            <div class="testimonial-card__name">Carlos Ruiz</div>
-                            <div class="testimonial-card__role">Desarrollador Freelance</div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <p class="testimonial-card__quote">
-                        Mi startup creci� aqu�. Los eventos de networking y la comunidad fueron clave
-                        para encontrar a mis primeros clientes y socios.
-                    </p>
-                    <div class="testimonial-card__author">
-                        <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80" alt="Ana Mart�nez" class="testimonial-card__avatar">
-                        <div>
-                            <div class="testimonial-card__name">Ana Mart�nez</div>
-                            <div class="testimonial-card__role">CEO, TechStart</div>
-                        </div>
-                    </div>
+                    <a href="#contacto" class="btn btn--secondary">Lista de espera</a>
                 </div>
             </div>
         </div>
@@ -1914,8 +1857,8 @@
                 <div class="footer__brand">
                     <div class="footer__logo">Cow<span>ok</span></div>
                     <p class="footer__description">
-                        Espacios de trabajo dise�ados para inspirar, conectar y potenciar tu
-                        productividad. �nete a nuestra comunidad de profesionales.
+                        Espacios de trabajo diseñados para inspirar, conectar y potenciar tu
+                        productividad. Únete a nuestra comunidad de profesionales.
                     </p>
                     <div class="footer__social">
                         <a href="#" class="footer__social-link" aria-label="Instagram">
@@ -1948,7 +1891,7 @@
                     <h4>Planes</h4>
                     <ul class="footer__links">
                         <li><a href="#" class="footer__link">Day Pass</a></li>
-                        <li><a href="#" class="footer__link">Membres�a Flexible</a></li>
+                        <li><a href="#" class="footer__link">Membresía Flexible</a></li>
                         <li><a href="#" class="footer__link">Escritorio Dedicado</a></li>
                         <li><a href="#" class="footer__link">Oficina Privada</a></li>
                     </ul>
@@ -1964,10 +1907,10 @@
                 </div>
             </div>
             <div class="footer__bottom">
-                <p class="footer__copyright">� 2024 Cowok. Todos los derechos reservados.</p>
+                <p class="footer__copyright">© 2024 Cowok. Todos los derechos reservados.</p>
                 <div class="footer__legal">
-                    <a href="#" class="footer__legal-link">Pol�tica de Privacidad</a>
-                    <a href="#" class="footer__legal-link">T�rminos y Condiciones</a>
+                    <a href="#" class="footer__legal-link">Política de Privacidad</a>
+                    <a href="#" class="footer__legal-link">Términos y Condiciones</a>
                     <a href="#" class="footer__legal-link">Cookies</a>
                 </div>
             </div>
@@ -2088,6 +2031,51 @@
             item.addEventListener('click', () => {
                 item.classList.toggle('feature-card__item--selected');
                 updateEmailVisibility();
+            });
+        });
+
+        // Google Forms submission
+        document.getElementById('featuresEmailSubmit').addEventListener('click', function() {
+            const email = document.getElementById('featuresEmailInput').value;
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) {
+                alert('Por favor, introduce un email válido');
+                return;
+            }
+
+            const selectedItems = [...document.querySelectorAll('.feature-card__item--selected')]
+                .map(item => {
+                    const text = item.childNodes[0].textContent.trim();
+                    const card = item.closest('.feature-card');
+                    const category = card.querySelector('.feature-card__title').textContent;
+                    return `${category}: ${text}`;
+                })
+                .join(', ');
+
+            if (!selectedItems) {
+                alert('Por favor, selecciona al menos un servicio');
+                return;
+            }
+
+            const googleFormURL = 'https://docs.google.com/forms/d/e/1FAIpQLScC1RGe3EeAv48En7U1uGPUwhitDAEygE-VfN9NBQzMyeeJMg/formResponse';
+            const formData = new FormData();
+            formData.append('entry.1677115098', email);
+            formData.append('entry.1134064827', selectedItems);
+
+            fetch(googleFormURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: formData
+            }).then(() => {
+                alert('¡Gracias! Te avisaremos cuando esté disponible.');
+                document.getElementById('featuresEmailInput').value = '';
+                document.querySelectorAll('.feature-card__item--selected').forEach(item => {
+                    item.classList.remove('feature-card__item--selected');
+                });
+                updateEmailVisibility();
+            }).catch(() => {
+                alert('Hubo un error. Por favor, inténtalo de nuevo.');
             });
         });
     </script>
