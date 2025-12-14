@@ -1212,6 +1212,10 @@
             font-style: italic;
         }
 
+        .calculator__subtitle--mobile {
+            display: none;
+        }
+
         .calculator__label {
             display: block;
             font-size: 0.9rem;
@@ -2160,7 +2164,12 @@
                 gap: var(--spacing-xs);
             }
 
-            .calculator__subtitle {
+            .calculator__subtitle--desktop {
+                display: none;
+            }
+
+            .calculator__subtitle--mobile {
+                display: inline;
                 font-size: 0.75rem;
             }
 
@@ -2331,7 +2340,7 @@
                 <div class="calculator" id="calculator">
                     <div class="calculator__header">
                         <h3 class="calculator__title">Elige tu acceso</h3>
-                        <span class="calculator__subtitle">Al hacer click se marcan con color los elementos incluidos en las tarjetas inferiores</span>
+                        <span class="calculator__subtitle calculator__subtitle--desktop">Selecciona las opciones para ver qué incluyen!</span><span class="calculator__subtitle calculator__subtitle--mobile">Al hacer click se marcan con color los elementos incluidos en las tarjetas inferiores</span>
                     </div>
 
                     <div class="calculator__options">
