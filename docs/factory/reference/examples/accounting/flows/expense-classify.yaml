@@ -1,0 +1,24 @@
+id: expense-classify
+version: 1
+description: "CSV de gastos → JournalDraft clasificado → gates contables → policy critic → risk → draft en ERP → watch reconciliación"
+artifact: journal_draft
+trigger: { intake: csv }
+stages:
+  route:
+    router: rules
+    lanes: [acct-default, acct-batch]
+    runners: [llm-classifier, rules-classifier, noop]
+  act:
+    skills: [skills/expense-classify.md]
+    context:
+      - { port: coa, kind: coa, params: { activeOnly: true } }
+      - { port: vendor-master, kind: vendor-master, params: {} }
+      - { port: prior-classifications, kind: prior-classifications, params: { byVendor: true } }
+  gates: [schema, balance, coa, period, vat, duplicate]
+  critics: [policy]
+  risk: { policy: rules, humanRequiredAbove: always }      # accounting: SIEMPRE humano en MVP
+  apply: { applier: erp-draft, mode: draft }
+  watch: { profile: post-draft-active }
+retrigger:
+  - { on: signal.erp-reconciliation.reconciliation.delta, flow: accounting/expense-adjust@1, reason: adjust }
+budget: default

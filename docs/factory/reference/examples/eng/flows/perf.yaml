@@ -1,0 +1,23 @@
+id: perf
+version: 1
+description: "Flow hijo (EJEMPLO, no demo MVP): regresión de latencia → propuesta de optimización como PR draft."
+artifact: patch
+child: true
+trigger: { intake: cli }
+stages:
+  route:
+    router: rules
+    lanes: [eng-heavy]
+    runners: [claude-code]
+    profiles: [thorough]
+  act:
+    skills: [skills/perf.md]
+    context:
+      - { port: git, kind: diff, params: { fromParentApply: true } }
+      - { port: datadog, kind: metric, params: { metric: http.p95_ms, windowMinutes: 60 }, maxBytes: 50000 }
+  gates: [typecheck, test, lint]
+  critics: [scope]                 # post-MVP: perf-regression critic (benchmark diff)
+  risk: { policy: rules, humanRequiredAbove: always }
+  apply: { applier: github-pr, mode: draft }
+  watch: { mode: none }
+budget: child

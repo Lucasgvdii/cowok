@@ -1,0 +1,27 @@
+id: codegen
+version: 1
+description: "Issue etiquetado → Patch → gates → critics → risk → PR draft → watch"
+artifact: patch
+trigger:
+  intake: github-issue
+  match: { labels: [factory] }
+stages:
+  route:
+    router: rules
+    lanes: [eng-default, eng-heavy]
+    runners: [claude-code, noop]
+    profiles: [fast, thorough]     # el router empieza en fast; re-route por maxSameRunnerAttempts pasa a thorough
+  act:
+    skills: [skills/codegen.md]
+    context:
+      - { port: git, kind: repo, params: { globs: ["src/**", "test/**", "package.json", "tsconfig.json"] }, maxBytes: 300000 }
+  gates: [typecheck, test, lint]
+  critics: [scope, security]
+  risk:
+    policy: rules
+    humanRequiredAbove: low        # low pasa sin humano SOLO si acceptance no está vacío (regla del workflow); en MVP igual todo pasa por humano si hay warn
+  apply: { applier: github-pr, mode: draft }
+  watch: { profile: post-merge-passive }
+retrigger:
+  - { on: signal.ci-status.ci.main.status, flow: eng/incident@1, reason: incident }
+budget: default

@@ -1,0 +1,22 @@
+id: expense-adjust
+version: 1
+description: "Flow hijo: delta de reconciliación → propone asientos de ajuste como JournalDraft. Nunca postea."
+artifact: journal_draft
+child: true
+trigger: { intake: cli }
+stages:
+  route:
+    router: rules
+    lanes: [acct-default]
+    runners: [rules-classifier, llm-classifier, noop]
+  act:
+    skills: [skills/expense-adjust.md]
+    context:
+      - { port: coa, kind: coa, params: { activeOnly: true } }
+      - { port: prior-classifications, kind: parent-draft, params: { fromParent: true } }
+  gates: [schema, balance, coa, period]
+  critics: [policy]
+  risk: { policy: rules, humanRequiredAbove: always }
+  apply: { applier: erp-draft, mode: draft }
+  watch: { mode: none }
+budget: child

@@ -1,0 +1,23 @@
+id: incident
+version: 1
+description: "Flow hijo: investiga una señal post-apply y PROPONE un fix como PR draft. No parchea prod."
+artifact: patch
+child: true
+trigger: { intake: cli }           # solo se abre desde watch (child: true); cli para tests
+stages:
+  route:
+    router: rules
+    lanes: [eng-default]
+    runners: [claude-code, noop]
+    profiles: [thorough]
+  act:
+    skills: [skills/incident.md]
+    context:
+      - { port: git, kind: diff, params: { fromParentApply: true } }
+      - { port: ci-logs, kind: ci-logs, params: { branch: main, last: 1 }, maxBytes: 200000 }
+  gates: [typecheck, test, lint]
+  critics: [scope]
+  risk: { policy: rules, humanRequiredAbove: always }
+  apply: { applier: github-pr, mode: draft }
+  watch: { mode: none }            # un hijo no abre nietos en MVP
+budget: child

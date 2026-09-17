@@ -1,0 +1,128 @@
+# factory.yaml — pack eng, repo acme/sandbox
+apiVersion: factory/v1
+domain: eng
+pack: "@factory/pack-eng@1"
+
+egress:
+  allowExternalLlm: true        # código interno puede ir a LLM externo (confirmar Q4)
+  maxSensitivity: internal
+
+intake:
+  - id: github-issue
+    with: { repo: acme/sandbox, label: factory, checklistAsAcceptance: true }
+  - id: cli
+
+routers:
+  - id: rules
+    with:
+      byLabel: { hotfix: incident, perf: perf }        # label → flow id (sin @version: usa la última publicada)
+      heavyIfPathsInBodyOver: 5                        # → lane eng-heavy
+
+lanes:
+  - { id: eng-default, concurrency: 2 }
+  - { id: eng-heavy, concurrency: 1 }
+
+runners:
+  - id: claude-code
+    lane: eng-default
+    produces: [patch]
+    with: { image: ghcr.io/acme/factory-runner-claude:1, checkoutMode: read-only, maxTurns: 60 }
+    profiles:
+      fast:     { model: claude-sonnet-5 }
+      thorough: { model: claude-opus-5 }
+  - id: noop
+    lane: eng-default
+    produces: [patch]
+    with: { fixture: fixtures/patch.diff }
+
+context:
+  - id: git
+    with: { repo: ., depth: 50 }
+  - id: ci-logs
+    with: { provider: github-actions }
+  - id: datadog
+    with: { stub: true }                                # MVP: valida config, no consulta
+
+gates:
+  - id: typecheck
+    kind: command
+    run: pnpm typecheck
+    parser: tsc
+    timeoutMinutes: 10
+  - id: test
+    kind: command
+    run: pnpm test -- --reporter=json --outputFile=.factory/test.json
+    parser: vitest
+    timeoutMinutes: 20
+  - id: lint
+    kind: command
+    run: pnpm lint -f json -o .factory/lint.json
+    parser: eslint
+    timeoutMinutes: 5
+
+critics:
+  - id: scope
+    with:
+      allowedPaths: ["src/**", "test/**", "docs/**"]
+      deniedPaths: ["migrations/**", "infra/**", ".github/**"]
+  - id: security
+    with: { decider: llm-structured, maxSeverity: warn }   # nunca block en MVP
+
+risk:
+  policies:
+    - id: rules
+      with:
+        highIfTouches: ["src/auth/**", "src/payments/**"]
+        highIfDiffLinesOver: 400
+        highIfTestsDeleted: true
+        mediumIfNoNewTests: true
+        relevanceByLabel: { hotfix: high, chore: low }
+  human: { id: github-pr-review, with: { alsoNotify: cli } }
+  approvers: ["@acme/backend-owners", "lucas"]
+
+apply:
+  - id: github-pr
+    modes: [draft]
+    with: { repo: acme/sandbox, branchPrefix: factory/, base: main }
+
+signals:
+  - id: synthetic
+  - id: ci-status
+    with: { repo: acme/sandbox, branch: main }
+  - id: datadog
+    with: { stub: true }
+
+monitor:
+  profiles:
+    none: { mode: none, windowMinutes: 0 }
+    post-merge-passive:
+      mode: passive
+      windowMinutes: 60
+      maxChildren: 1
+      subscriptions:
+        - { source: ci-status, metric: ci.main.status, condition: { op: neq, value: success }, childFlow: eng/incident@1, reason: incident }
+    post-merge-active:
+      mode: active
+      windowMinutes: 240
+      pollMinutes: 10
+      maxChildren: 2
+      subscriptions:
+        - { source: ci-status, metric: ci.main.status, condition: { op: neq, value: success }, childFlow: eng/incident@1, reason: incident }
+        - { source: datadog, metric: http.p95_ms, condition: { op: delta_gt, value: 100, forMinutes: 15 }, childFlow: eng/perf@1, reason: perf }
+  matrix:            # impact × relevance → profile
+    low:    { low: none,               medium: none,               high: post-merge-passive }
+    medium: { low: post-merge-passive, medium: post-merge-passive, high: post-merge-active }
+    high:   { low: post-merge-passive, medium: post-merge-active,  high: post-merge-active }
+
+budgets:
+  default: { maxAttempts: 3, maxUsd: 8,  maxWallClockMinutes: 180, maxNoProgress: 1, maxSameRunnerAttempts: 2, humanTimeoutHours: 72 }
+  child:   { maxAttempts: 2, maxUsd: 4,  maxWallClockMinutes: 60,  maxNoProgress: 1, maxSameRunnerAttempts: 1, humanTimeoutHours: 24 }
+
+flows:
+  - flows/codegen.yaml
+  - flows/incident.yaml
+  - flows/perf.yaml
+
+skills:
+  - skills/codegen.md
+  - skills/incident.md

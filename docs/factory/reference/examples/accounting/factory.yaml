@@ -1,0 +1,115 @@
+# factory.yaml — pack accounting, repo finance-factory
+apiVersion: factory/v1
+domain: accounting
+pack: "@factory/pack-accounting@1"
+
+egress:
+  allowExternalLlm: false         # BLOQUEANTE Q4. Mientras sea false, el router solo puede elegir rules-classifier.
+  maxSensitivity: confidential
+
+intake:
+  - id: csv
+    with:
+      columns: { required: [row_id, date, vendor, amount, currency, description], optional: [tax_code, cost_center] }
+      sensitivity: confidential
+  - id: cli
+
+routers:
+  - id: rules
+    with:
+      batchIfRowsOver: 500                                   # → lane acct-batch
+      runnerIfExternalLlmDisallowed: rules-classifier
+
+lanes:
+  - { id: acct-default, concurrency: 2 }
+  - { id: acct-batch, concurrency: 1 }
+
+runners:
+  - id: llm-classifier
+    lane: acct-default
+    produces: [journal_draft]
+    with: { decider: llm-structured, candidateAccountsPerRow: 5 }
+  - id: rules-classifier
+    lane: acct-default
+    produces: [journal_draft]
+    with: { vendorMaster: data/vendors.csv, fallbackAccount: "9999-UNCLASSIFIED" }
+  - id: noop
+    lane: acct-default
+    produces: [journal_draft]
+    with: { fixture: fixtures/journal.json }
+
+context:
+  - id: coa
+    with: { file: data/coa.csv }
+  - id: vendor-master
+    with: { file: data/vendors.csv }
+  - id: prior-classifications
+    with: { lastN: 20 }                                      # del event log propio, solo aprobadas
+
+gates:
+  - id: schema
+  - id: balance
+    with: { decimals: 2 }
+  - id: coa
+    with: { file: data/coa.csv, requireActive: true }
+  - id: period
+    with: { openPeriods: ["2026-08", "2026-09"] }            # post-MVP: leer del ERP
+  - id: vat
+    with: { ratesByCountry: data/vat.csv }
+  - id: duplicate
+    with: { windowDays: 3, severity: warn }
+
+critics:
+  - id: policy
+    with:
+      file: policies/expense-policy.yaml                    # categorías prohibidas, límites, cost center obligatorio
+      decider: rules                                        # llm-structured solo si egress lo permite
+
+risk:
+  policies:
+    - id: rules
+      with:
+        highIfNewVendor: true
+        highIfTotalOver: 10000
+        sensitiveAccounts: ["15*", "27*"]                   # capex, intercompany
+        impactByTotal: { low: 1000, medium: 10000 }         # < low → low, < medium → medium, resto high
+        relevanceBySensitiveAccount: high
+  human: { id: cli }
+  approvers: ["finance-controller", "lucas"]
+
+apply:
+  - id: erp-draft
+    modes: [draft]
+    with: { format: generic-json, outDir: out/, erp: { adapter: stub } }   # Q3: cuál ERP
+
+signals:
+  - id: synthetic
+  - id: erp-reconciliation
+    with: { stub: true }
+
+monitor:
+  profiles:
+    none: { mode: none, windowMinutes: 0 }
+    post-draft-active:
+      mode: active
+      windowMinutes: 10080              # 7 días
+      pollMinutes: 1440                 # diario
+      maxChildren: 1
+      subscriptions:
+        - { source: erp-reconciliation, metric: reconciliation.delta, condition: { op: delta_gt, value: 100 }, childFlow: accounting/expense-adjust@1, reason: adjust }
+        - { source: synthetic, metric: reconciliation.delta, condition: { op: gt, value: 100 }, childFlow: accounting/expense-adjust@1, reason: adjust }
+  matrix:
+    low:    { low: none,              medium: none,              high: post-draft-active }
+    medium: { low: none,              medium: post-draft-active, high: post-draft-active }
+    high:   { low: post-draft-active, medium: post-draft-active, high: post-draft-active }
+
+budgets:
+  default: { maxAttempts: 3, maxUsd: 3, maxWallClockMinutes: 30, maxNoProgress: 1, maxSameRunnerAttempts: 2, humanTimeoutHours: 120 }
+  child:   { maxAttempts: 2, maxUsd: 2, maxWallClockMinutes: 30, maxNoProgress: 1, maxSameRunnerAttempts: 1, humanTimeoutHours: 120 }
+
+flows:
+  - flows/expense-classify.yaml
+  - flows/expense-adjust.yaml
+
+skills:
+  - skills/expense-classify.md
