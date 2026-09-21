@@ -9,6 +9,8 @@ apply → watch → retrigger) con packs de dominio intercambiables (`eng`, `acc
 
 ## Orden de lectura
 
+Vista rápida: [overview.html](overview.html) tiene siete figuras (capas, grafo, workers y credenciales, resolver y packs, estados, decisiones descartadas, plan) con referencia al doc que respalda cada una.
+
 | # | Archivo | Qué responde |
 |---|---------|--------------|
 | 1 | [01-framing.md](01-framing.md) | Qué es / no es, usuarios, métricas de éxito MVP, riesgos, inconsistencias del brief |

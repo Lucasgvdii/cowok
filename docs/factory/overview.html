@@ -1,0 +1,460 @@
+<title>Factory Control Plane</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F5F3EE; --surface:#FBFAF7; --ink:#1E1D1A; --muted:#6E6A61; --line:#D8D3C8; --line-soft:#E8E4DB;
+  --teal:#0E7C7B; --teal-soft:#D9EEEC; --violet:#5F4FC4; --violet-soft:#E6E2F7; --amber:#B8781C; --amber-soft:#F6E8CF;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",sans-serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#16181B; --surface:#1E2125; --ink:#E9E6DF; --muted:#9C978C; --line:#3B3F46; --line-soft:#2C3036;
+  --teal:#45B8B5; --teal-soft:#123A3A; --violet:#A99CF2; --violet-soft:#2A2645; --amber:#E2AB48; --amber-soft:#3C2E15;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#16181B; --surface:#1E2125; --ink:#E9E6DF; --muted:#9C978C; --line:#3B3F46; --line-soft:#2C3036;
+  --teal:#45B8B5; --teal-soft:#123A3A; --violet:#A99CF2; --violet-soft:#2A2645; --amber:#E2AB48; --amber-soft:#3C2E15;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;margin:0;padding-block:32px 64px;padding-inline:16px;}
+main{max-width:1040px;margin:0 auto;}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(28px,4vw,40px);line-height:1.1;margin:0 0 8px;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.2;margin:0 0 6px;text-wrap:balance}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.lede{max-width:66ch;color:var(--muted);margin:0 0 28px}
+section{margin-block:40px 0;padding-top:28px;border-top:1px solid var(--line)}
+section p{max-width:70ch;margin:8px 0}
+figure{margin:18px 0 0;}
+.scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line-soft);border-radius:6px;padding:12px}
+svg{display:block;max-width:100%;height:auto;min-width:640px;font-family:var(--body);color:var(--ink)}
+figcaption{font-size:13px;color:var(--muted);margin-top:10px;max-width:80ch}
+code{font-family:var(--mono);font-size:.92em;background:var(--line-soft);padding:1px 5px;border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:16px 28px;font-size:13px;color:var(--muted);margin:14px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.sw{width:26px;height:14px;border-radius:2px;border:2px solid;box-sizing:border-box}
+.sw.teal{border-color:var(--teal);background:var(--teal-soft)}
+.sw.violet{border-color:var(--violet);border-style:dashed;background:var(--violet-soft)}
+.sw.amber{border-color:var(--amber);background:var(--amber-soft)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;margin-top:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line-soft)}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td:first-child{font-weight:600;white-space:nowrap}
+.tbl{overflow-x:auto}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 24px;font-size:13.5px;margin-top:14px}
+.map div{display:flex;gap:10px;align-items:baseline}
+.map b{font-family:var(--mono);font-weight:500;color:var(--teal);white-space:nowrap}
+/* SVG classes */
+.bx{fill:var(--surface);stroke:currentColor;stroke-width:1.2}
+.bx.teal{fill:var(--teal-soft);stroke:var(--teal)}
+.bx.violet{fill:var(--violet-soft);stroke:var(--violet);stroke-dasharray:5 3}
+.bx.amber{fill:var(--amber-soft);stroke:var(--amber)}
+.bx.ghost{fill:none;stroke:var(--muted);stroke-dasharray:3 3}
+.ln{stroke:currentColor;stroke-width:1.3;fill:none}
+.ln.dash{stroke-dasharray:5 4;stroke:var(--muted)}
+.ln.teal{stroke:var(--teal)}
+.ln.amber{stroke:var(--amber)}
+.ln.violet{stroke:var(--violet)}
+.ln.no{stroke:var(--muted);stroke-dasharray:2 3}
+.t{font-size:12px;fill:currentColor}
+.tb{font-size:13px;font-weight:600;fill:currentColor}
+.tm{font-size:10.5px;fill:var(--muted);font-family:var(--mono)}
+.tmono{font-size:11px;fill:currentColor;font-family:var(--mono)}
+.tt{font-size:11px;fill:var(--muted)}
+.ta{fill:var(--amber);font-size:11px;font-weight:600}
+.tv{fill:var(--violet);font-size:11px}
+.tg{fill:var(--teal);font-size:11px;font-weight:600}
+.bar{fill:var(--teal)} .bar.off{fill:var(--line)} .bar.buf{fill:none;stroke:var(--muted);stroke-dasharray:4 3}
+@media (max-width:640px){ body{font-size:14.5px} }
+@media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+</style>
+
+<main>
+<p class="eyebrow">Scope · docs/factory · 2026-09-21</p>
+<h1>Factory Control Plane</h1>
+<p class="lede">Siete figuras que muestran lo decidido en el scope: cómo se apilan las capas, por dónde pasa un ticket, quién tiene credenciales, por qué dos packs corren sobre un solo binario, qué estados existen, qué alternativas se descartaron y en qué orden se construye. Cada figura corresponde a un documento de <code>docs/factory/</code>.</p>
+
+<div class="legend">
+  <span><i class="sw teal"></i> código / reglas deterministas</span>
+  <span><i class="sw violet"></i> acá puede vivir un LLM o Jev (detrás de <code>Decider</code>)</span>
+  <span><i class="sw amber"></i> credenciales de escritura o decisión humana</span>
+</div>
+
+<!-- ───────────────────────── Fig 1 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 1 · 01-framing.md</p>
+<h2>Cuatro capas, y ninguna importa la de arriba</h2>
+<p>El control plane solo conoce <code>@factory/contracts</code>. Los packs también. Lo único que conecta packs con control plane es el binario del worker, que los carga por configuración en runtime.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 860 290" role="img" aria-label="Pila de cuatro capas: packs, factory.yaml, control-plane y contracts. Packs y control-plane importan contracts; control-plane nunca importa packs; apps/worker carga ambos en runtime.">
+<defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+<marker id="a1m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+<!-- layers -->
+<rect class="bx violet" x="120" y="20" width="420" height="46" rx="3"/>
+<text class="tb" x="132" y="39">packs/eng · packs/accounting</text>
+<text class="tm" x="132" y="56">plugins + JSON Schema de artifact y proposal kinds</text>
+<rect class="bx" x="120" y="84" width="420" height="46" rx="3"/>
+<text class="tb" x="132" y="103">factory.yaml + flows/*.yaml</text>
+<text class="tm" x="132" y="120">binding por repo: qué plugin en qué stage, umbrales, budgets</text>
+<rect class="bx teal" x="120" y="148" width="420" height="46" rx="3"/>
+<text class="tb" x="132" y="167">packages/control-plane</text>
+<text class="tm" x="132" y="184">worker Temporal: ticketWorkflow + resolveFlow + PluginRegistry</text>
+<rect class="bx teal" x="120" y="212" width="420" height="46" rx="3"/>
+<text class="tb" x="132" y="231">@factory/contracts</text>
+<text class="tm" x="132" y="248">tipos + puertos + zod schemas. No importa nada.</text>
+<!-- imports on the left -->
+<path class="ln violet" d="M120 43 H70 V235 H118" marker-end="url(#a1)"/>
+<text class="tv" x="62" y="140" text-anchor="end">importa</text>
+<path class="ln teal" d="M120 171 H96 V235 H118" marker-end="url(#a1)"/>
+<!-- never -->
+<path class="ln no" d="M540 155 H580 V55 H544" marker-end="url(#a1m)"/>
+<line x1="571" y1="114" x2="589" y2="96" stroke="var(--amber)" stroke-width="2"/>
+<line x1="571" y1="96" x2="589" y2="114" stroke="var(--amber)" stroke-width="2"/>
+<text class="tt" x="592" y="126">control-plane nunca</text>
+<text class="tt" x="592" y="140">importa un pack</text>
+<!-- reads -->
+<path class="ln dash" d="M330 130 V146" marker-end="url(#a1m)"/>
+<text class="tt" x="338" y="143">resolveFlow lo lee como datos</text>
+<!-- worker -->
+<rect class="bx" x="620" y="205" width="180" height="58" rx="3"/>
+<text class="tb" x="630" y="225">apps/worker</text>
+<text class="tm" x="630" y="241">FACTORY_PACKS=</text>
+<text class="tm" x="630" y="255">pack-eng,pack-accounting</text>
+<path class="ln dash" d="M700 205 V43 H542" marker-end="url(#a1m)"/>
+<path class="ln dash" d="M620 234 H600 V171 H542" marker-end="url(#a1m)"/>
+<text class="tt" x="708" y="130">carga en runtime</text>
+</svg></div>
+<figcaption>La flecha tachada es la métrica de modularidad: agregar el pack accounting no cambia una línea de <code>packages/control-plane</code>. El resolver lee yaml como datos; el worker carga packs por variable de entorno.</figcaption>
+</figure>
+</section>
+
+<!-- ───────────────────────── Fig 2 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 2 · 04-ports-and-packs.md · 05-control-plane.md</p>
+<h2>Un grafo fijo de nueve stages, un puerto por stage, un solo canal de feedback</h2>
+<p>El actor produce un <code>Artifact</code> y nada más. Todo lo que vuelve hacia él (gates, critics, el humano que rechaza) es <code>Finding[]</code> con <code>Proposal</code> tipada. Los caps se evalúan en el workflow antes de cada re-entrada a <code>act</code>, nunca dentro del modelo.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 1180 436" role="img" aria-label="Flujo intake, route, act, gates, critics, risk, apply, watch, retrigger. Gates y critics devuelven findings bloqueantes a act. Risk deriva si hace falta un humano; el humano aprueba hacia apply o rechaza con findings hacia act. Watch abre un ticket hijo por señal. Un recuadro de budget lista los caps.">
+<defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+<marker id="a2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker>
+<marker id="a2t" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--teal)"/></marker></defs>
+<!-- retrigger loop over the top -->
+<path class="ln teal" d="M1084 170 V20 H92 V168" marker-end="url(#a2t)"/>
+<text class="tg" x="600" y="14" text-anchor="middle">señal matcheada → ticket hijo {parent, reason: perf | incident | adjust} · cap maxChildren</text>
+<!-- human gate -->
+<rect class="bx amber" x="672" y="48" width="180" height="44" rx="3"/>
+<text class="tb" x="762" y="66" text-anchor="middle">HumanGate</text>
+<text class="tm" x="762" y="82" text-anchor="middle">approve · reject(Finding[]) · timeout</text>
+<path class="ln amber" d="M712 170 V94" marker-end="url(#a2a)"/>
+<text class="tt" x="704" y="136" text-anchor="end">requiresHuman</text>
+<text class="tt" x="704" y="149" text-anchor="end">(regla del workflow)</text>
+<path class="ln amber" d="M836 92 V168" marker-end="url(#a2a)"/>
+<text class="ta" x="844" y="140">approve</text>
+<path class="ln amber" d="M672 70 H340 V168" marker-end="url(#a2a)"/>
+<text class="ta" x="500" y="64" text-anchor="middle">reject → Finding[] con source: human</text>
+<!-- stage boxes -->
+<g>
+<rect class="bx teal" x="40" y="170" width="104" height="56" rx="3"/><text class="tb" x="92" y="192" text-anchor="middle">intake</text><text class="tm" x="92" y="210" text-anchor="middle">IntakeAdapter</text>
+<rect class="bx violet" x="164" y="170" width="104" height="56" rx="3"/><text class="tb" x="216" y="192" text-anchor="middle">route</text><text class="tm" x="216" y="210" text-anchor="middle">Router · Decider</text>
+<rect class="bx violet" x="288" y="170" width="104" height="56" rx="3"/><text class="tb" x="340" y="192" text-anchor="middle">act</text><text class="tm" x="340" y="210" text-anchor="middle">Runner · sin creds</text>
+<rect class="bx teal" x="412" y="170" width="104" height="56" rx="3"/><text class="tb" x="464" y="192" text-anchor="middle">gates</text><text class="tm" x="464" y="210" text-anchor="middle">Gate ×N · código</text>
+<rect class="bx violet" x="536" y="170" width="104" height="56" rx="3"/><text class="tb" x="588" y="192" text-anchor="middle">critics</text><text class="tm" x="588" y="210" text-anchor="middle">Critic · Decider</text>
+<rect class="bx violet" x="660" y="170" width="104" height="56" rx="3"/><text class="tb" x="712" y="192" text-anchor="middle">risk</text><text class="tm" x="712" y="210" text-anchor="middle">RiskPolicy · Decider</text>
+<rect class="bx amber" x="784" y="170" width="104" height="56" rx="3"/><text class="tb" x="836" y="192" text-anchor="middle">apply</text><text class="tm" x="836" y="210" text-anchor="middle">Applier · secrets</text>
+<rect class="bx teal" x="908" y="170" width="104" height="56" rx="3"/><text class="tb" x="960" y="192" text-anchor="middle">watch</text><text class="tm" x="960" y="210" text-anchor="middle">SignalSource</text>
+<rect class="bx teal" x="1032" y="170" width="104" height="56" rx="3"/><text class="tb" x="1084" y="192" text-anchor="middle">retrigger</text><text class="tm" x="1084" y="210" text-anchor="middle">child ticket</text>
+</g>
+<!-- forward arrows -->
+<path class="ln" d="M144 198 H162" marker-end="url(#a2)"/>
+<path class="ln" d="M268 198 H286" marker-end="url(#a2)"/>
+<path class="ln" d="M392 198 H410" marker-end="url(#a2)"/>
+<path class="ln" d="M516 198 H534" marker-end="url(#a2)"/>
+<path class="ln" d="M640 198 H658" marker-end="url(#a2)"/>
+<path class="ln" d="M764 198 H782" marker-end="url(#a2)"/>
+<path class="ln" d="M888 198 H906" marker-end="url(#a2)"/>
+<path class="ln" d="M1012 198 H1030" marker-end="url(#a2)"/>
+<text class="tt" x="773" y="236" text-anchor="middle">low</text>
+<text class="tt" x="897" y="236" text-anchor="middle">draft</text>
+<!-- ticket states under boxes -->
+<text class="tm" x="92" y="250" text-anchor="middle">received</text>
+<text class="tm" x="216" y="250" text-anchor="middle">routed</text>
+<text class="tm" x="340" y="250" text-anchor="middle">acting</text>
+<text class="tm" x="464" y="250" text-anchor="middle">gating</text>
+<text class="tm" x="588" y="250" text-anchor="middle">reviewing</text>
+<text class="tm" x="712" y="250" text-anchor="middle">assessing</text>
+<text class="tm" x="836" y="250" text-anchor="middle">applying → applied</text>
+<text class="tm" x="960" y="250" text-anchor="middle">watching</text>
+<text class="tm" x="1084" y="250" text-anchor="middle">→ received</text>
+<!-- feedback loops -->
+<path class="ln teal" d="M430 226 V282 H300 V228" marker-end="url(#a2t)"/>
+<text class="tg" x="365" y="296" text-anchor="middle">gate fail → block</text>
+<path class="ln violet" d="M554 226 V318 H314 V228" marker-end="url(#a2)"/>
+<text class="tv" x="434" y="332" text-anchor="middle">critic block (warn no re-loopea: va al humano)</text>
+<!-- budget box -->
+<rect class="bx" x="40" y="352" width="590" height="72" rx="3"/>
+<text class="tb" x="52" y="371">FeedbackBundle + caps, antes de cada re-entrada a act</text>
+<text class="tm" x="52" y="388">dedup por fingerprint · maxAttempts · maxUsd · maxWallClock</text>
+<text class="tm" x="52" y="402">maxNoProgress (mismo set de fingerprints) · maxSameRunner → re-route con exclude</text>
+<text class="tm" x="52" y="416">cap superado → escalated + evento budget.exceeded. Nunca reintento silencioso.</text>
+<!-- egress note -->
+<rect class="bx ghost" x="660" y="352" width="476" height="72" rx="3"/>
+<text class="tb" x="672" y="371">egress (en la activity, no en el prompt)</text>
+<text class="tm" x="672" y="388">si sensitivity &gt; egress.maxSensitivity o allowExternalLlm = false:</text>
+<text class="tm" x="672" y="402">los Decider llm / jev no se invocan; cae a rules o el stage bloquea.</text>
+<text class="tm" x="672" y="416">accounting arranca con allowExternalLlm: false (pregunta Q4).</text>
+</svg></div>
+<figcaption>Los stages violeta son los únicos donde un modelo opina, y siempre a través de <code>Decision&lt;T&gt;</code>. Los gates son código puro y corren antes que cualquier critic. El humano habla el mismo idioma que los gates: un rechazo es una lista de findings.</figcaption>
+</figure>
+</section>
+
+<!-- ───────────────────────── Fig 3 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 3 · 05-control-plane.md §5.2</p>
+<h2>Las credenciales son una propiedad del deploy, no del prompt</h2>
+<p>Tres tipos de worker en tres task queues de Temporal. El runner corre en un worker que no monta ningún secret de escritura. Solo el worker de I/O del dominio tiene el token de GitHub o las credenciales del ERP, y es el único que ejecuta <code>apply</code>.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 960 380" role="img" aria-label="Temporal reparte actividades a tres workers: control (workflow, sin secrets), lane (runner en contenedor efímero, sin secrets) e io por dominio (gates, critics, apply, señales, con secrets). Postgres guarda tickets y eventos; un blob store guarda artifacts y logs.">
+<defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+<marker id="a3m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+<rect class="bx" x="40" y="24" width="880" height="40" rx="3"/>
+<text class="tb" x="52" y="42">Temporal server · task queues</text>
+<text class="tm" x="52" y="57">workflowId = ticket:&lt;domain&gt;:&lt;externalRef&gt; (idempotencia de intake) · no es base de consulta</text>
+<!-- queue arrows -->
+<path class="ln" d="M175 64 V118" marker-end="url(#a3)"/><text class="tmono" x="182" y="96">factory-control</text>
+<path class="ln" d="M475 64 V118" marker-end="url(#a3)"/><text class="tmono" x="482" y="96">lane:&lt;lane&gt;</text>
+<path class="ln" d="M780 64 V118" marker-end="url(#a3)"/><text class="tmono" x="787" y="96">factory-io:&lt;domain&gt;</text>
+<!-- control worker -->
+<rect class="bx teal" x="40" y="120" width="270" height="160" rx="3"/>
+<text class="tb" x="52" y="140">control worker</text>
+<text class="t" x="52" y="162">ticketWorkflow (intérprete de FlowSpec)</text>
+<text class="t" x="52" y="180">resolveFlow · route · assessRisk</text>
+<text class="t" x="52" y="198">transition → valida TICKET_TRANSITIONS</text>
+<text class="t" x="52" y="216">budgets · requiresHuman · MonitorPolicy</text>
+<rect class="bx" x="52" y="238" width="120" height="24" rx="12"/>
+<text class="tmono" x="112" y="254" text-anchor="middle">secrets: ninguno</text>
+<!-- lane worker -->
+<rect class="bx violet" x="340" y="120" width="270" height="160" rx="3"/>
+<text class="tb" x="352" y="140">lane worker · uno por lane</text>
+<rect class="bx ghost" x="352" y="152" width="246" height="76" rx="3"/>
+<text class="t" x="364" y="172">contenedor efímero por intento</text>
+<text class="t" x="364" y="190">Runner: claude-code · llm-classifier · noop</text>
+<text class="t" x="364" y="208">checkout read-only → Artifact + Cost</text>
+<text class="tm" x="364" y="222">heartbeat 2 min · timeout 90 min</text>
+<rect class="bx" x="352" y="238" width="246" height="24" rx="12"/>
+<text class="tmono" x="475" y="254" text-anchor="middle">sin secrets · sin GITHUB_TOKEN ni ERP</text>
+<!-- io worker -->
+<rect class="bx amber" x="640" y="120" width="280" height="160" rx="3"/>
+<text class="tb" x="652" y="140">io worker (uno por dominio)</text>
+<text class="t" x="652" y="162">fetchContext · runGate · runCritic</text>
+<text class="t" x="652" y="180">apply (draft) · find (idempotencia)</text>
+<text class="t" x="652" y="198">subscribeSignals · pollSignals</text>
+<text class="t" x="652" y="216">requestHuman</text>
+<rect class="bx amber" x="652" y="238" width="256" height="24" rx="12"/>
+<text class="tmono" x="780" y="254" text-anchor="middle">secrets: GITHUB_TOKEN · ERP · Datadog</text>
+<!-- storage -->
+<rect class="bx" x="40" y="316" width="270" height="44" rx="3"/>
+<text class="tb" x="52" y="334">Postgres</text>
+<text class="tm" x="52" y="350">tickets (proyección) · ticket_events</text>
+<path class="ln" d="M175 280 V314" marker-end="url(#a3)"/>
+<rect class="bx" x="340" y="316" width="580" height="44" rx="3"/>
+<text class="tb" x="352" y="334">Blob store</text>
+<text class="tm" x="352" y="350">payload de artifacts · logs de runner y gates (logsRef en el evento)</text>
+<path class="ln dash" d="M475 280 V314" marker-end="url(#a3m)"/>
+<path class="ln dash" d="M780 280 V314" marker-end="url(#a3m)"/>
+</svg></div>
+<figcaption>Un test de integración de la semana 7 verifica que el contenedor del runner no puede hacer <code>git push</code> ni ver credenciales de ERP. La regla "el actor nunca escribe a prod" no depende de que el modelo obedezca.</figcaption>
+</figure>
+</section>
+
+<!-- ───────────────────────── Fig 4 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 4 · 06-factory-yaml.md</p>
+<h2>Dos repos, dos packs, un binario</h2>
+<p>El resolver combina <code>factory.yaml</code> con un <code>flows/*.yaml</code> y produce un <code>FlowSpec</code> con digest, que se pinnea en el ticket. El workflow interpreta ese spec viendo solo strings; las activities resuelven cada <code>PluginId</code> en el registro que cargó los packs.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 960 340" role="img" aria-label="Los repos acme/sandbox y finance-factory aportan factory.yaml y flows. resolveFlow produce un FlowSpec con digest que el único ticketWorkflow interpreta. Las activities resuelven PluginIds en un PluginRegistry cargado con pack-eng y pack-accounting.">
+<defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+<marker id="a4m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+<!-- repos -->
+<rect class="bx" x="30" y="30" width="230" height="104" rx="3"/>
+<text class="tb" x="42" y="50">repo acme/sandbox</text>
+<text class="tmono" x="42" y="70">factory.yaml  domain: eng</text>
+<text class="tmono" x="42" y="86">flows/codegen · incident · perf</text>
+<text class="tmono" x="42" y="102">skills/*.md</text>
+<text class="tm" x="42" y="122">egress.allowExternalLlm: true</text>
+<rect class="bx" x="30" y="190" width="230" height="120" rx="3"/>
+<text class="tb" x="42" y="210">repo finance-factory</text>
+<text class="tmono" x="42" y="230">factory.yaml  domain: accounting</text>
+<text class="tmono" x="42" y="246">flows/expense-classify · adjust</text>
+<text class="tmono" x="42" y="262">data/coa.csv · vendors.csv</text>
+<text class="tmono" x="42" y="278">policies/expense-policy.yaml</text>
+<text class="tm" x="42" y="298">egress.allowExternalLlm: false</text>
+<!-- resolver -->
+<rect class="bx teal" x="330" y="112" width="240" height="104" rx="3"/>
+<text class="tb" x="342" y="132">resolveFlow</text>
+<text class="t" x="342" y="152">factory.yaml ⊕ flow.yaml</text>
+<text class="t" x="342" y="168">→ FlowSpec { digest }</text>
+<text class="tm" x="342" y="186">valida with: vs plugin.configSchema</text>
+<text class="tm" x="342" y="200">rechaza commit · sin gates · sin budget</text>
+<path class="ln" d="M260 82 H300 V150 H328" marker-end="url(#a4)"/>
+<path class="ln" d="M260 250 H300 V178 H328" marker-end="url(#a4)"/>
+<text class="tt" x="304" y="122">lee</text>
+<!-- workflow -->
+<rect class="bx teal" x="640" y="20" width="290" height="94" rx="3"/>
+<text class="tb" x="652" y="40">ticketWorkflow · uno solo</text>
+<text class="t" x="652" y="60">interpreta FlowSpec stage por stage</text>
+<text class="tm" x="652" y="78">solo ve PluginId + config; nunca importa un pack</text>
+<text class="tm" x="652" y="92">digest pinned en Ticket.flowDigest:</text>
+<text class="tm" x="652" y="106">un yaml nuevo no afecta tickets en vuelo</text>
+<path class="ln teal" d="M570 150 H600 V70 H638" marker-end="url(#a4)"/>
+<text class="tg" x="604" y="120" text-anchor="middle">FlowSpec</text>
+<!-- registry -->
+<rect class="bx violet" x="640" y="190" width="290" height="120" rx="3"/>
+<text class="tb" x="652" y="210">PluginRegistry · apps/worker</text>
+<text class="tmono" x="652" y="230">@factory/pack-eng        → 19 plugins</text>
+<text class="tmono" x="652" y="246">@factory/pack-accounting → 21 plugins</text>
+<text class="t" x="652" y="266">get(domain, stage, pluginId) → instancia</text>
+<text class="tm" x="652" y="284">cada activity resuelve acá; falla si falta</text>
+<text class="tm" x="652" y="298">FACTORY_PACKS= define qué packs carga</text>
+<path class="ln" d="M785 114 V188" marker-end="url(#a4)"/>
+<text class="tt" x="792" y="154">activity(pluginId, with)</text>
+<!-- contracts strip -->
+<rect class="bx" x="330" y="262" width="240" height="48" rx="3"/>
+<text class="tb" x="342" y="282">@factory/contracts</text>
+<text class="tm" x="342" y="298">lo único que los tres comparten</text>
+<path class="ln dash" d="M450 262 V218" marker-end="url(#a4m)"/>
+<path class="ln dash" d="M450 310 V326 H785 V312" marker-end="url(#a4m)"/>
+</svg></div>
+<figcaption>Criterio de demoable de la semana 5: entre el tag de la demo eng y el de la demo accounting, <code>git diff --stat packages/control-plane</code> no imprime nada. Los conteos de plugins son los declarados en los factory.yaml de ejemplo.</figcaption>
+</figure>
+</section>
+
+<!-- ───────────────────────── Fig 5 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 5 · 03-domain-model.md</p>
+<h2>Estados del ticket: dos loops legales y una sola salida hacia arriba</h2>
+<p>Solo <code>gating</code>, <code>reviewing</code> y <code>awaiting_human</code> pueden devolver el ticket a <code>acting</code>, y siempre pasando por el chequeo de budget. Todo cap superado termina en <code>escalated</code>, de donde solo una decisión humana lo saca.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 1080 310" role="img" aria-label="Cadena de estados received a closed. Retornos a acting desde gating, reviewing y awaiting_human. Salto de assessing a applying cuando el riesgo es bajo. Un riel superior escalated recibe caídas desde acting, gating, reviewing, awaiting_human y watching.">
+<defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
+<marker id="a5m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker>
+<marker id="a5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--amber)"/></marker></defs>
+<!-- escalated rail -->
+<rect class="bx amber" x="180" y="18" width="820" height="26" rx="13"/>
+<text class="tmono" x="590" y="35" text-anchor="middle">escalated ← caps (attempts · $ · no-progress · same-runner) · human timeout · maxChildren · router abstiene</text>
+<path class="ln dash" d="M251 140 V46" marker-end="url(#a5m)"/>
+<path class="ln dash" d="M347 140 V46" marker-end="url(#a5m)"/>
+<path class="ln dash" d="M443 140 V46" marker-end="url(#a5m)"/>
+<path class="ln dash" d="M655 140 V46" marker-end="url(#a5m)"/>
+<path class="ln dash" d="M923 140 V46" marker-end="url(#a5m)"/>
+<!-- skip arc -->
+<path class="ln teal" d="M539 140 V92 H731 V138" marker-end="url(#a5)"/>
+<text class="tg" x="635" y="86" text-anchor="middle">low · sin warns · acceptance ≠ ∅</text>
+<!-- nodes -->
+<g>
+<rect class="bx" x="14" y="140" width="90" height="30" rx="15"/><text class="tmono" x="59" y="159" text-anchor="middle">received</text>
+<rect class="bx" x="110" y="140" width="90" height="30" rx="15"/><text class="tmono" x="155" y="159" text-anchor="middle">routed</text>
+<rect class="bx violet" x="206" y="140" width="90" height="30" rx="15"/><text class="tmono" x="251" y="159" text-anchor="middle">acting</text>
+<rect class="bx teal" x="302" y="140" width="90" height="30" rx="15"/><text class="tmono" x="347" y="159" text-anchor="middle">gating</text>
+<rect class="bx violet" x="398" y="140" width="90" height="30" rx="15"/><text class="tmono" x="443" y="159" text-anchor="middle">reviewing</text>
+<rect class="bx violet" x="494" y="140" width="90" height="30" rx="15"/><text class="tmono" x="539" y="159" text-anchor="middle">assessing</text>
+<rect class="bx amber" x="590" y="140" width="90" height="30" rx="15"/><text class="tmono" x="635" y="159" text-anchor="middle" font-size="9.5">awaiting_human</text>
+<rect class="bx amber" x="686" y="140" width="90" height="30" rx="15"/><text class="tmono" x="731" y="159" text-anchor="middle">applying</text>
+<rect class="bx" x="782" y="140" width="90" height="30" rx="15"/><text class="tmono" x="827" y="159" text-anchor="middle">applied</text>
+<rect class="bx teal" x="878" y="140" width="90" height="30" rx="15"/><text class="tmono" x="923" y="159" text-anchor="middle">watching</text>
+<rect class="bx" x="974" y="140" width="90" height="30" rx="15"/><text class="tmono" x="1019" y="159" text-anchor="middle">closed</text>
+</g>
+<!-- forward -->
+<path class="ln" d="M104 155 H108" marker-end="url(#a5)"/><path class="ln" d="M200 155 H204" marker-end="url(#a5)"/><path class="ln" d="M296 155 H300" marker-end="url(#a5)"/><path class="ln" d="M392 155 H396" marker-end="url(#a5)"/><path class="ln" d="M488 155 H492" marker-end="url(#a5)"/><path class="ln" d="M584 155 H588" marker-end="url(#a5)"/><path class="ln" d="M680 155 H684" marker-end="url(#a5)"/><path class="ln" d="M776 155 H780" marker-end="url(#a5)"/><path class="ln" d="M872 155 H876" marker-end="url(#a5)"/><path class="ln" d="M968 155 H972" marker-end="url(#a5)"/>
+<!-- returns -->
+<path class="ln teal" d="M347 170 V196 H267 V172" marker-end="url(#a5)"/>
+<text class="tt" x="307" y="210" text-anchor="middle">gate block</text>
+<path class="ln violet" d="M443 170 V226 H251 V172" marker-end="url(#a5)"/>
+<text class="tt" x="360" y="240" text-anchor="middle">critic block</text>
+<path class="ln amber" d="M635 170 V256 H235 V172" marker-end="url(#a5a)"/>
+<text class="tt" x="450" y="270" text-anchor="middle">reject(Finding[]) · cuenta como intento</text>
+<!-- watching → child -->
+<text class="tt" x="923" y="190" text-anchor="middle">señal → hijo;</text>
+<text class="tt" x="923" y="203" text-anchor="middle">el padre sigue watching</text>
+<text class="tt" x="827" y="190" text-anchor="middle">monitor none</text>
+<text class="tt" x="827" y="203" text-anchor="middle">→ closed directo</text>
+<!-- footer -->
+<text class="tm" x="14" y="288">failed (runner infra × N) y cancelled (signal cancel) no se dibujan.</text>
+<text class="tm" x="14" y="302">escalated y failed → acting | closed únicamente por HumanDecision. Tabla completa: TICKET_TRANSITIONS en contracts.ts.</text>
+</svg></div>
+<figcaption>El ticket es una proyección: los findings, decisiones y costos de cada intento viven en <code>ticket_events</code>, no en el ticket. Así un loop de tres intentos no hace crecer el objeto que leen el router y el humano.</figcaption>
+</figure>
+</section>
+
+<!-- ───────────────────────── Fig 6 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 6 · 01 §1.6 · 05</p>
+<h2>Decisiones de diseño y la alternativa que cada una descarta</h2>
+<p>Las que cambian respecto al brief original están marcadas. Todas siguen la lectura conservadora: más gates, menos autonomía.</p>
+<div class="tbl"><table>
+<thead><tr><th>Decisión</th><th>Elegido</th><th>Descartado</th><th>Por qué</th><th>Dónde vive</th></tr></thead>
+<tbody>
+<tr><td>Orchestrator</td><td>Temporal</td><td>Inngest</td><td>Runner de 20–60 min con heartbeat y lanes como task queues con workers separados son nativos. En Inngest son workarounds.</td><td>ADR-001, semana 1</td></tr>
+<tr><td>Forma del grafo</td><td>Un <code>ticketWorkflow</code> que interpreta <code>FlowSpec</code></td><td>Un workflow por dominio; motor de DAGs</td><td>El modelo no inventa el workflow. Un flow solo bindea plugins y saltea stages opcionales.</td><td>ticket-workflow.ts</td></tr>
+<tr><td>Unidad de extensión</td><td>Pack npm + <code>factory.yaml</code> como binding</td><td>Solo yaml; código por repo</td><td>Un pack sirve N repos. La modularidad se mide como diff cero en el control plane.</td><td>PackManifest, 04 §4.2</td></tr>
+<tr><td>Feedback al actor</td><td><code>Finding[]</code> con <code>Proposal</code> tipada</td><td>Prosa libre, historial de chat</td><td>Un solo canal para gates, critics, humano y señales. El fingerprint habilita el cap de no-progreso.</td><td>contracts.ts §2</td></tr>
+<tr><td>Dónde vive el LLM / Jev <span class="tv">· propuesta</span></td><td><code>Decider</code> con rules / llm-structured / jev</td><td>Jev obligatorio; LLM en gates</td><td>Jev deja de bloquear: es un adapter. Gates siguen siendo código.</td><td>contracts.ts §1</td></tr>
+<tr><td>Quién decide si hay humano <span class="tv">· propuesta</span></td><td>El workflow, por regla</td><td>El <code>RiskPolicy</code></td><td>Un LLM en risk no puede eximirse de humano. <code>requiresHuman</code> es derivado, nunca devuelto.</td><td>05 §5.5</td></tr>
+<tr><td>MonitorPolicy <span class="tv">· propuesta</span></td><td>Matriz impacto × relevancia en yaml</td><td>Decisión de LLM</td><td>Determinista y auditable. El LLM a lo sumo aporta impacto y relevancia como <code>Decision</code>.</td><td>factory.yaml monitor.matrix</td></tr>
+<tr><td>Runner sin credenciales</td><td>Worker por lane sin secrets</td><td>Instrucción en el prompt</td><td>Propiedad de deploy verificable por test, no promesa del modelo.</td><td>Fig. 3, issue 33</td></tr>
+<tr><td>Líneas rojas del MVP</td><td>Rechazadas en el schema <code>factory/v1</code></td><td>Flags de runtime</td><td><code>commit</code>, <code>never</code>, flows sin gates o budget no llegan al orchestrator. Habilitarlos es subir a v2, visible en el diff.</td><td>factory-schema.ts</td></tr>
+<tr><td>Modelo de datos</td><td>Event log + ticket como proyección</td><td>Ticket como estado mutable</td><td>Findings y costos por intento no inflan el ticket. Métricas salen de SQL sobre eventos.</td><td>03 §3.3</td></tr>
+<tr><td>Critics LLM en MVP</td><td>Solo emiten <code>warn</code></td><td>Pueden bloquear</td><td>Un critic ruidoso no genera loops. El warn sube al humano.</td><td>04 §4.3, 01 §1.6</td></tr>
+<tr><td>Datos financieros</td><td><code>allowExternalLlm: false</code> hasta respuesta</td><td>Asumir que pueden salir</td><td>El runner accounting arranca con reglas. Bloqueante Q4.</td><td>examples/accounting/factory.yaml</td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ───────────────────────── Fig 7 ───────────────────────── -->
+<section>
+<p class="eyebrow">Fig. 7 · 07-delivery-plan.md</p>
+<h2>Siete semanas, un camino crítico, accounting en paralelo</h2>
+<p>Accounting queda fuera del camino crítico a propósito: se construye desde la semana 4 sin tocar el control plane, y esa es la prueba del claim.</p>
+<figure><div class="scroll">
+<svg viewBox="0 0 900 330" role="img" aria-label="Cronograma de ocho semanas. Camino crítico: E0 semana 1, E1 semanas 1 a 2, E2 semanas 2 a 3, E3 semana 3, E4 semana 4, E6 semana 6, E7 semana 7. E5 accounting en semanas 4 a 5 en paralelo. Semana 8 buffer. Hitos: demo eng al final de la semana 4, demo accounting y diff cero al final de la 5, demoable al final de la 7.">
+<defs><marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
+<!-- week grid -->
+<g>
+<text class="tm" x="205" y="20" text-anchor="middle">w1</text><text class="tm" x="295" y="20" text-anchor="middle">w2</text><text class="tm" x="385" y="20" text-anchor="middle">w3</text><text class="tm" x="475" y="20" text-anchor="middle">w4</text><text class="tm" x="565" y="20" text-anchor="middle">w5</text><text class="tm" x="655" y="20" text-anchor="middle">w6</text><text class="tm" x="745" y="20" text-anchor="middle">w7</text><text class="tm" x="835" y="20" text-anchor="middle">w8</text>
+<line class="ln" x1="160" y1="28" x2="160" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="250" y1="28" x2="250" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="340" y1="28" x2="340" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="430" y1="28" x2="430" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="520" y1="28" x2="520" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="610" y1="28" x2="610" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="700" y1="28" x2="700" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="790" y1="28" x2="790" y2="300" stroke="var(--line-soft)"/><line class="ln" x1="880" y1="28" x2="880" y2="300" stroke="var(--line-soft)"/>
+</g>
+<!-- rows: y = 40 + 30*i, h=20 -->
+<text class="t" x="8" y="54">E0 decisiones + esqueleto</text><rect class="bar" x="160" y="40" width="90" height="20" rx="2"/>
+<text class="t" x="8" y="84">E1 contratos + resolver</text><rect class="bar" x="160" y="70" width="180" height="20" rx="2"/>
+<text class="t" x="8" y="114">E2 intérprete + loop noop</text><rect class="bar" x="250" y="100" width="180" height="20" rx="2"/>
+<text class="t" x="8" y="144">E3 eng · act + gates</text><rect class="bar" x="340" y="130" width="90" height="20" rx="2"/>
+<text class="t" x="8" y="174">E4 eng · critics/risk/human/apply</text><rect class="bar" x="430" y="160" width="90" height="20" rx="2"/>
+<text class="t" x="8" y="204">E5 accounting completo</text><rect class="bar off" x="430" y="190" width="180" height="20" rx="2"/>
+<text class="t" x="8" y="234">E6 watch + señal + hijo</text><rect class="bar" x="610" y="220" width="90" height="20" rx="2"/>
+<text class="t" x="8" y="264">E7 hardening + demo</text><rect class="bar" x="700" y="250" width="90" height="20" rx="2"/>
+<text class="t" x="8" y="294">buffer</text><rect class="bar buf" x="790" y="280" width="90" height="20" rx="2"/>
+<!-- dependency E2 → E5 -->
+<path class="ln dash" d="M430 120 V150 H420 V200 H428" marker-end="url(#a7)"/>
+<text class="tt" x="414" y="185" text-anchor="end">depende de E2, no de E4</text>
+<!-- milestones -->
+<line class="ln amber" x1="520" y1="160" x2="520" y2="186"/><text class="ta" x="524" y="187">demo eng</text>
+<line class="ln amber" x1="610" y1="190" x2="610" y2="216"/><text class="ta" x="614" y="217">demo acct · diff = 0</text>
+<line class="ln amber" x1="790" y1="250" x2="790" y2="276"/><text class="ta" x="794" y="277" font-size="10">demoable</text>
+</svg></div>
+<figcaption>Barras teal: camino crítico. La barra gris de E5 arranca cuando E2 cierra y puede llevarla una segunda persona. Los hitos ámbar son los tres momentos en que se puede mostrar algo.</figcaption>
+</figure>
+</section>
+
+<section>
+<p class="eyebrow">Mapa</p>
+<h2>Qué archivo respalda cada figura</h2>
+<div class="map">
+<div><b>Fig. 1</b><span>01-framing.md · README.md (resumen ejecutivo)</span></div>
+<div><b>Fig. 2</b><span>04-ports-and-packs.md · 05-control-plane.md §5.4–5.6 · reference/contracts.ts §2, §9</span></div>
+<div><b>Fig. 3</b><span>05-control-plane.md §5.2–5.3 · issue 33 del plan</span></div>
+<div><b>Fig. 4</b><span>06-factory-yaml.md · reference/factory-schema.ts · reference/examples/**</span></div>
+<div><b>Fig. 5</b><span>03-domain-model.md · TICKET_TRANSITIONS en contracts.ts · reference/ticket-workflow.ts</span></div>
+<div><b>Fig. 6</b><span>01-framing.md §1.6 · 05-control-plane.md §5.1</span></div>
+<div><b>Fig. 7</b><span>07-delivery-plan.md · 08-open-questions.md</span></div>
+</div>
+</section>
+</main>
