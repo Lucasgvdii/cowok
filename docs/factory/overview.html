@@ -67,24 +67,108 @@ td:first-child{font-weight:600;white-space:nowrap}
 .bar{fill:var(--teal)} .bar.off{fill:var(--line)} .bar.buf{fill:none;stroke:var(--muted);stroke-dasharray:4 3}
 @media (max-width:640px){ body{font-size:14.5px} }
 @media (prefers-reduced-motion: reduce){ *{animation:none!important;transition:none!important} }
+
+.callout{border-left:3px solid var(--teal);background:var(--surface);padding:12px 16px;margin:14px 0;border-radius:0 4px 4px 0;max-width:78ch}
+.callout.amber{border-left-color:var(--amber)}
+.callout.violet{border-left-color:var(--violet)}
+.callout b{font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:4px;color:var(--muted)}
+.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px 28px;margin-top:14px}
+.gloss div{padding:10px 0;border-top:1px solid var(--line-soft)}
+.gloss dt{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--teal);margin:0 0 3px}
+.gloss dd{margin:0;font-size:13.5px;color:var(--ink)}
+.steps{list-style:none;padding:0;margin:14px 0 0;counter-reset:s;max-width:78ch}
+.steps li{position:relative;padding:8px 0 10px 44px;border-left:1px solid var(--line);margin-left:14px}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:-15px;top:8px;width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--line);font-family:var(--mono);font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.steps li b{display:block;font-weight:600}
+.steps li .st{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:6px;font-weight:400}
+.steps li.loop::before{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+.steps li.human::before{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.qa{max-width:78ch}
+.qa h3{font-family:var(--display);font-size:16px;margin:16px 0 4px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px 28px}
+.two ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.toc{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin:0 0 8px}
+.toc a{color:var(--teal);text-decoration:none;border-bottom:1px solid var(--line)}
 </style>
 
 <main>
-<p class="eyebrow">Scope · docs/factory · 2026-09-21</p>
+<p class="eyebrow">Onboarding · docs/factory · 2026-09-21</p>
 <h1>Factory Control Plane</h1>
-<p class="lede">Siete figuras que muestran lo decidido en el scope: cómo se apilan las capas, por dónde pasa un ticket, quién tiene credenciales, por qué dos packs corren sobre un solo binario, qué estados existen, qué alternativas se descartaron y en qué orden se construye. Cada figura corresponde a un documento de <code>docs/factory/</code>.</p>
+<p class="lede">Este documento explica desde cero qué estamos construyendo, por qué tiene la forma que tiene y qué decisiones ya están tomadas. Está escrito para alguien que se suma hoy, sea de ingeniería, de finanzas o de plataforma. No hace falta haber leído nada antes.</p>
+<nav class="toc">
+<a href="#problema">El problema</a><a href="#vocab">Vocabulario</a><a href="#ejemplo">Un ticket de punta a punta</a><a href="#capas">Fig. 1 Capas</a><a href="#grafo">Fig. 2 Grafo</a><a href="#creds">Fig. 3 Credenciales</a><a href="#packs">Fig. 4 Packs</a><a href="#estados">Fig. 5 Estados</a><a href="#decisiones">Fig. 6 Decisiones</a><a href="#plan">Fig. 7 Plan</a><a href="#nuevo">Agregar un dominio</a><a href="#limites">Límites</a><a href="#mapa">Mapa</a>
+</nav>
 
-<div class="legend">
-  <span><i class="sw teal"></i> código / reglas deterministas</span>
-  <span><i class="sw violet"></i> acá puede vivir un LLM o Jev (detrás de <code>Decider</code>)</span>
-  <span><i class="sw amber"></i> credenciales de escritura o decisión humana</span>
+<!-- ───────────── El problema ───────────── -->
+<section id="problema">
+<p class="eyebrow">Empezá acá</p>
+<h2>El problema que resolvemos</h2>
+<p>Hoy, cuando alguien quiere que un agente de IA haga trabajo real (escribir un cambio de código, clasificar gastos de un mes), el proceso alrededor del agente es artesanal: alguien lo dispara, alguien mira el resultado, alguien corre los tests, alguien decide si es seguro, alguien lo aplica, y nadie mira qué pasa después. Cada equipo lo arma distinto y cada vez que cambia el modelo hay que rehacer todo.</p>
+<p>Queremos una <strong>línea de producción con inspección</strong>: un pedido entra, se le asigna un carril y un operario (el agente), el operario produce una pieza, la pieza pasa por controles automáticos y por inspectores, alguien evalúa el riesgo, si hace falta una persona la aprueba, la pieza se aplica, y se monitorea el resultado. Si el monitoreo detecta un problema, se abre un pedido nuevo que vuelve a la línea.</p>
+<p>La idea central es que <strong>la línea es la misma para cualquier tipo de trabajo</strong>. Lo que cambia entre "escribir código" y "clasificar gastos" son las piezas que se enchufan en cada estación, no la línea. A eso le llamamos <em>control plane</em> (la línea) y <em>packs</em> (las piezas de cada dominio).</p>
+<div class="callout"><b>En una frase</b>Un orquestador durable que ejecuta un grafo fijo de nueve pasos sobre un ticket, donde cada paso lo resuelve un plugin declarado en un archivo yaml, y donde el agente nunca escribe a producción por sí mismo.</div>
+<div class="two">
+<div><strong>Quién lo usa</strong><ul>
+<li><strong>Ingeniería:</strong> etiqueta un issue, recibe un PR draft con los tests en verde, aprueba o rechaza.</li>
+<li><strong>Finanzas:</strong> sube un CSV de gastos, recibe un borrador de asientos con evidencia por línea, aprueba o rechaza.</li>
+<li><strong>Plataforma:</strong> opera el orquestador, publica packs, define presupuestos y ve el costo por ticket.</li>
+</ul></div>
+<div><strong>Qué no es</strong><ul>
+<li>No es un agente ni un chatbot. El agente es una pieza reemplazable.</li>
+<li>No reemplaza al CI ni al ERP. Los invoca y produce borradores.</li>
+<li>No es un producto para vender. Es una plataforma interna.</li>
+<li>No es una fábrica sin humanos. En esta etapa siempre hay una persona antes de aplicar algo relevante.</li>
+</ul></div>
 </div>
+</section>
 
-<!-- ───────────────────────── Fig 1 ───────────────────────── -->
-<section>
+<!-- ───────────── Vocabulario ───────────── -->
+<section id="vocab">
+<p class="eyebrow">Vocabulario · 60 segundos</p>
+<h2>Las doce palabras que vas a ver en todos lados</h2>
+<p>Todas están definidas como tipos en <code>reference/contracts.ts</code>. Acá van en lenguaje llano.</p>
+<dl class="gloss">
+<div><dt>Ticket</dt><dd>Un pedido de trabajo. Tiene un objetivo, criterios de aceptación, un estado, un presupuesto y cuánto lleva gastado. Es lo que viaja por la línea.</dd></div>
+<div><dt>Flow</dt><dd>La receta de un tipo de trabajo, escrita en un archivo yaml versionado (<code>eng/codegen@1</code>). Dice qué pieza va en cada estación. No puede inventar estaciones nuevas.</dd></div>
+<div><dt>Pack</dt><dd>Un paquete de código con todas las piezas de un dominio. Hay uno de ingeniería y uno de contabilidad. El control plane no sabe qué hay adentro.</dd></div>
+<div><dt>Puerto / Plugin</dt><dd>Un puerto es el enchufe de una estación (una interfaz). Un plugin es una pieza concreta que entra en ese enchufe. Hay diez puertos, uno por estación.</dd></div>
+<div><dt>Runner (el actor)</dt><dd>El agente que produce el trabajo: Claude Code para código, un clasificador para gastos. Corre sin credenciales de escritura. Se puede reemplazar por uno "vacío" para probar la línea.</dd></div>
+<div><dt>Artifact</dt><dd>Lo único que el runner entrega: un parche de código (<code>Patch</code>) o un borrador de asientos (<code>JournalDraft</code>). Nunca un cambio aplicado.</dd></div>
+<div><dt>Gate</dt><dd>Un control automático y determinista, sin IA: correr los tests, verificar que los débitos igualen los créditos. Si falla, el ticket vuelve al runner.</dd></div>
+<div><dt>Critic</dt><dd>Un inspector especialista (seguridad, alcance, política de gastos). Acá sí puede haber un modelo. Solo emite hallazgos; no decide.</dd></div>
+<div><dt>Finding + Proposal</dt><dd>Un hallazgo es una observación con severidad y ubicación. Una proposal es la corrección sugerida, en formato tipado (reemplazar estas líneas, reclasificar esta cuenta). Es el único idioma en el que algo le habla al runner. Nunca prosa libre.</dd></div>
+<div><dt>Decision&lt;T&gt;</dt><dd>El único formato en que un modelo "opina": un valor, una confianza, la evidencia y quién decidió. Un modelo puede abstenerse (valor nulo).</dd></div>
+<div><dt>Risk + HumanGate</dt><dd>Reglas que estiman impacto y relevancia del artifact. El workflow deriva si hace falta una persona. La persona aprueba o rechaza con hallazgos.</dd></div>
+<div><dt>Apply, Watch, Señal</dt><dd>Apply es la única estación con credenciales; por ahora solo crea borradores (PR draft, asiento sin postear). Watch observa métricas durante una ventana. Una señal que matchea abre un ticket hijo.</dd></div>
+</dl>
+</section>
+
+<!-- ───────────── Ejemplo ───────────── -->
+<section id="ejemplo">
+<p class="eyebrow">Un ticket de punta a punta</p>
+<h2>Qué pasa cuando alguien etiqueta el issue #42</h2>
+<p>El ejemplo es de ingeniería. Más abajo va la versión de contabilidad; el punto es que ambas recorren exactamente los mismos pasos.</p>
+<ol class="steps">
+<li><b>Entra el pedido <span class="st">received</span></b>Alguien pone la etiqueta <code>factory</code> en el issue #42 de <code>acme/sandbox</code>. El adaptador de intake lo convierte en un ticket: el título es el objetivo, la checklist del cuerpo son los criterios de aceptación. Si el mismo issue se etiqueta dos veces, no se crea un segundo ticket.</li>
+<li><b>Se elige carril, receta y operario <span class="st">routed</span></b>El router mira el pedido y elige entre lo que el repo declaró en su <code>factory.yaml</code>: la receta <code>codegen@1</code>, el carril <code>eng-default</code>, el runner <code>claude-code</code> en perfil rápido. No puede elegir nada que no esté declarado. La receta se congela para este ticket: si alguien cambia el yaml mañana, este ticket sigue con la versión con la que empezó.</li>
+<li><b>El runner produce un parche <span class="st">acting · intento 1</span></b>Se levanta un contenedor efímero con el repo en modo lectura. Claude Code recibe el objetivo, los criterios, el contexto (archivos relevantes) y una skill versionada del repo. Devuelve un diff. El contenedor no tiene token de GitHub: no puede pushear aunque quiera.</li>
+<li class="loop"><b>Los controles automáticos fallan <span class="st">gating</span></b>Se corren typecheck, tests y lint en paralelo. Typecheck encuentra dos errores. Cada error se convierte en un hallazgo con archivo, línea, código estable (<code>tsc/TS2322</code>) y, cuando se puede, una proposal mecánica. Antes de volver al runner, el workflow revisa el presupuesto: van 1 de 3 intentos, el gasto está por debajo del tope, y los hallazgos son nuevos (no es el mismo set que el intento anterior). Vuelve.</li>
+<li><b>Segundo intento <span class="st">acting · intento 2</span></b>El runner recibe solo los hallazgos bloqueantes, deduplicados, con sus proposals. No recibe historial de chat ni prosa. Produce un parche nuevo. Esta vez los tres gates pasan.</li>
+<li><b>Los inspectores opinan <span class="st">reviewing</span></b>El critic de alcance (reglas puras) verifica que el parche no toque <code>migrations/</code> ni <code>infra/</code>. El critic de seguridad (un modelo, detrás de una <code>Decision</code>) marca una advertencia. Las advertencias no vuelven al runner: van a la persona.</li>
+<li><b>Se estima el riesgo <span class="st">assessing</span></b>Reglas: toca <code>src/auth/</code>, así que impacto alto; tiene la etiqueta <code>hotfix</code>, relevancia alta. Nivel: alto. El workflow deriva que hace falta una persona. Con impacto alto y relevancia alta, la matriz de monitoreo elige el perfil <code>post-merge-active</code>.</li>
+<li class="human"><b>Una persona decide <span class="st">awaiting_human</span></b>Se abre un PR draft con los hallazgos como comentarios y se pide review a los aprobadores del repo. Si la persona rechaza, sus comentarios entran como hallazgos y el ticket vuelve al runner. Si pasan 72 horas sin respuesta, el ticket se escala. Acá aprueba.</li>
+<li><b>Se aplica en modo borrador <span class="st">applying → applied</span></b>El único worker con credenciales marca el PR draft como listo. No hay merge automático en esta etapa. Si esta acción se ejecutara dos veces, la segunda no crea un segundo PR.</li>
+<li><b>Se observa el resultado <span class="st">watching</span></b>Durante 240 minutos se mira el estado del CI en <code>main</code> y la latencia p95. Si el CI de main falla, se abre un ticket hijo con la receta <code>incident@1</code>, que investiga y propone un fix como otro PR draft. El ticket padre sigue observando. Al vencer la ventana, se cierra.</li>
+</ol>
+<div class="callout amber"><b>La versión de contabilidad</b>Cambiá "issue #42" por "CSV de gastos de agosto", "parche" por "borrador de asientos", "typecheck y tests" por "balance, cuentas existentes, período abierto, IVA, duplicados", "critic de seguridad" por "critic de política de gastos", "PR draft" por "asiento sin postear en el ERP", y "CI de main" por "delta de conciliación". Los diez pasos, los estados, los presupuestos y el comando para aprobar son idénticos. Eso es lo que queremos demostrar.</div>
+</section>
+
+<!-- ───────────── Fig 1 ───────────── -->
+<section id="capas">
 <p class="eyebrow">Fig. 1 · 01-framing.md</p>
-<h2>Cuatro capas, y ninguna importa la de arriba</h2>
-<p>El control plane solo conoce <code>@factory/contracts</code>. Los packs también. Lo único que conecta packs con control plane es el binario del worker, que los carga por configuración en runtime.</p>
+<h2>Cómo está apilado el código</h2>
+<p><strong>Qué estás mirando.</strong> Cuatro capas. Abajo, <code>@factory/contracts</code>: los tipos y las interfaces, nada más. Sobre eso, el control plane: el orquestador que ejecuta la línea. Sobre eso, los archivos yaml de cada repo, que dicen qué pieza va dónde. Arriba, los packs: las piezas concretas de cada dominio.</p>
+<p><strong>La regla.</strong> Una capa nunca importa la de arriba. Los packs importan contracts. El control plane importa contracts. El control plane no importa packs: lee los yaml como datos y el binario del worker carga los packs por una variable de entorno en runtime.</p>
 <figure><div class="scroll">
 <svg viewBox="0 0 860 290" role="img" aria-label="Pila de cuatro capas: packs, factory.yaml, control-plane y contracts. Packs y control-plane importan contracts; control-plane nunca importa packs; apps/worker carga ambos en runtime.">
 <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
@@ -126,13 +210,14 @@ td:first-child{font-weight:600;white-space:nowrap}
 </svg></div>
 <figcaption>La flecha tachada es la métrica de modularidad: agregar el pack accounting no cambia una línea de <code>packages/control-plane</code>. El resolver lee yaml como datos; el worker carga packs por variable de entorno.</figcaption>
 </figure>
+<div class="callout"><b>Por qué está así</b>Si el control plane importara un pack, agregar un dominio nuevo sería tocar el control plane. La flecha tachada es literalmente la métrica que vamos a medir en CI: entre la demo de ingeniería y la de contabilidad, el diff del control plane tiene que ser cero.</div>
 </section>
 
-<!-- ───────────────────────── Fig 2 ───────────────────────── -->
-<section>
+<!-- ───────────── Fig 2 ───────────── -->
+<section id="grafo">
 <p class="eyebrow">Fig. 2 · 04-ports-and-packs.md · 05-control-plane.md</p>
-<h2>Un grafo fijo de nueve stages, un puerto por stage, un solo canal de feedback</h2>
-<p>El actor produce un <code>Artifact</code> y nada más. Todo lo que vuelve hacia él (gates, critics, el humano que rechaza) es <code>Finding[]</code> con <code>Proposal</code> tipada. Los caps se evalúan en el workflow antes de cada re-entrada a <code>act</code>, nunca dentro del modelo.</p>
+<h2>La línea de producción completa</h2>
+<p><strong>Qué estás mirando.</strong> Las nueve estaciones, de izquierda a derecha, con el puerto que resuelve cada una y el estado del ticket debajo. Los colores dicen quién decide en cada estación: teal es código, violeta punteado es donde puede haber un modelo, ámbar es donde hay credenciales o una persona. Las flechas que vuelven por abajo son los dos únicos loops. La caja de HumanGate arriba muestra que la persona puede mandar el ticket a aplicar o de vuelta al runner. La flecha larga por arriba es una señal abriendo un ticket hijo.</p>
 <figure><div class="scroll">
 <svg viewBox="0 0 1180 436" role="img" aria-label="Flujo intake, route, act, gates, critics, risk, apply, watch, retrigger. Gates y critics devuelven findings bloqueantes a act. Risk deriva si hace falta un humano; el humano aprueba hacia apply o rechaza con findings hacia act. Watch abre un ticket hijo por señal. Un recuadro de budget lista los caps.">
 <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
@@ -205,13 +290,15 @@ td:first-child{font-weight:600;white-space:nowrap}
 </svg></div>
 <figcaption>Los stages violeta son los únicos donde un modelo opina, y siempre a través de <code>Decision&lt;T&gt;</code>. Los gates son código puro y corren antes que cualquier critic. El humano habla el mismo idioma que los gates: un rechazo es una lista de findings.</figcaption>
 </figure>
+<div class="callout"><b>Por qué está así</b>Hay una sola forma de hablarle al runner, y es una lista de hallazgos tipados. Eso hace que gates, inspectores y personas sean intercambiables desde el punto de vista del runner, y que podamos contar cuántas veces aparece el mismo hallazgo (para cortar loops). Los presupuestos viven en el workflow porque un cap escrito en un prompt no es un cap.</div>
+<div class="callout violet"><b>Dónde puede vivir un modelo (o Jev)</b>Solo en route, act, critics y risk, y siempre detrás de la abstracción <code>Decider</code>, que tiene tres implementaciones: reglas, un modelo con salida estructurada, y Jev. Un gate nunca usa un modelo. Si el contexto es sensible y el dominio no permite mandar datos afuera, el workflow no invoca a los deciders externos: cae a reglas o bloquea. Eso está en código, no en una convención.</div>
 </section>
 
-<!-- ───────────────────────── Fig 3 ───────────────────────── -->
-<section>
+<!-- ───────────── Fig 3 ───────────── -->
+<section id="creds">
 <p class="eyebrow">Fig. 3 · 05-control-plane.md §5.2</p>
-<h2>Las credenciales son una propiedad del deploy, no del prompt</h2>
-<p>Tres tipos de worker en tres task queues de Temporal. El runner corre en un worker que no monta ningún secret de escritura. Solo el worker de I/O del dominio tiene el token de GitHub o las credenciales del ERP, y es el único que ejecuta <code>apply</code>.</p>
+<h2>Quién tiene las llaves</h2>
+<p><strong>Qué estás mirando.</strong> Temporal, el orquestador, reparte trabajo a tres tipos de proceso (workers) a través de colas. El worker de control corre el workflow y las decisiones baratas; no tiene secretos. El worker de carril corre el runner dentro de un contenedor efímero; tampoco tiene secretos. El worker de I/O del dominio corre gates, inspectores, la aplicación y las suscripciones a métricas; es el único que monta el token de GitHub o las credenciales del ERP. Abajo, la base de datos con el ticket y su historial de eventos, y un almacén de blobs para parches y logs.</p>
 <figure><div class="scroll">
 <svg viewBox="0 0 960 380" role="img" aria-label="Temporal reparte actividades a tres workers: control (workflow, sin secrets), lane (runner en contenedor efímero, sin secrets) e io por dominio (gates, critics, apply, señales, con secrets). Postgres guarda tickets y eventos; un blob store guarda artifacts y logs.">
 <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
@@ -264,13 +351,14 @@ td:first-child{font-weight:600;white-space:nowrap}
 </svg></div>
 <figcaption>Un test de integración de la semana 7 verifica que el contenedor del runner no puede hacer <code>git push</code> ni ver credenciales de ERP. La regla "el actor nunca escribe a prod" no depende de que el modelo obedezca.</figcaption>
 </figure>
+<div class="callout amber"><b>Por qué está así</b>"El agente nunca escribe a producción" se puede cumplir de dos maneras: pidiéndoselo en el prompt, o no dándole las llaves. Elegimos la segunda. Es una propiedad del despliegue y hay un test de integración en el plan que verifica que el contenedor del runner no puede hacer push ni ver credenciales.</div>
 </section>
 
-<!-- ───────────────────────── Fig 4 ───────────────────────── -->
-<section>
+<!-- ───────────── Fig 4 ───────────── -->
+<section id="packs">
 <p class="eyebrow">Fig. 4 · 06-factory-yaml.md</p>
-<h2>Dos repos, dos packs, un binario</h2>
-<p>El resolver combina <code>factory.yaml</code> con un <code>flows/*.yaml</code> y produce un <code>FlowSpec</code> con digest, que se pinnea en el ticket. El workflow interpreta ese spec viendo solo strings; las activities resuelven cada <code>PluginId</code> en el registro que cargó los packs.</p>
+<h2>Cómo un repo se engancha sin tocar nada del centro</h2>
+<p><strong>Qué estás mirando.</strong> A la izquierda, dos repos. Uno de código (<code>acme/sandbox</code>) y uno de finanzas (<code>finance-factory</code>, que guarda el plan de cuentas, los proveedores y la política de gastos versionados en git). Cada uno tiene un <code>factory.yaml</code> que declara sus piezas y una carpeta <code>flows/</code> con sus recetas. En el medio, el resolver combina ambos archivos en un <code>FlowSpec</code>, lo valida contra el schema y le calcula un digest que se congela en el ticket. A la derecha, el único workflow interpreta ese spec viendo solo nombres de plugin, y el registro de plugins, cargado con los dos packs, resuelve cada nombre a una instancia.</p>
 <figure><div class="scroll">
 <svg viewBox="0 0 960 340" role="img" aria-label="Los repos acme/sandbox y finance-factory aportan factory.yaml y flows. resolveFlow produce un FlowSpec con digest que el único ticketWorkflow interpreta. Las activities resuelven PluginIds en un PluginRegistry cargado con pack-eng y pack-accounting.">
 <defs><marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
@@ -327,13 +415,14 @@ td:first-child{font-weight:600;white-space:nowrap}
 </svg></div>
 <figcaption>Criterio de demoable de la semana 5: entre el tag de la demo eng y el de la demo accounting, <code>git diff --stat packages/control-plane</code> no imprime nada. Los conteos de plugins son los declarados en los factory.yaml de ejemplo.</figcaption>
 </figure>
+<div class="callout"><b>Por qué está así</b>Dos archivos con dos responsabilidades: <code>factory.yaml</code> dice qué piezas existen y cómo se configuran en este repo; cada <code>flows/*.yaml</code> dice qué piezas usa una receta y con qué umbrales. Ninguno de los dos puede reordenar estaciones ni inventar una nueva. El schema rechaza las cosas que no queremos en esta etapa (aplicar en modo commit, recetas sin gates o sin presupuesto, saltarse a la persona) antes de que el orquestador las vea.</div>
 </section>
 
-<!-- ───────────────────────── Fig 5 ───────────────────────── -->
-<section>
+<!-- ───────────── Fig 5 ───────────── -->
+<section id="estados">
 <p class="eyebrow">Fig. 5 · 03-domain-model.md</p>
-<h2>Estados del ticket: dos loops legales y una sola salida hacia arriba</h2>
-<p>Solo <code>gating</code>, <code>reviewing</code> y <code>awaiting_human</code> pueden devolver el ticket a <code>acting</code>, y siempre pasando por el chequeo de budget. Todo cap superado termina en <code>escalated</code>, de donde solo una decisión humana lo saca.</p>
+<h2>Todos los estados por los que puede pasar un ticket</h2>
+<p><strong>Qué estás mirando.</strong> La cadena feliz de <code>received</code> a <code>closed</code>. Tres flechas que vuelven a <code>acting</code>: un gate que falla, un inspector que bloquea, una persona que rechaza. Un atajo de <code>assessing</code> a <code>applying</code> cuando el riesgo es bajo, no hay advertencias y el pedido trajo criterios de aceptación. Arriba, el riel <code>escalated</code>: ahí cae un ticket cuando supera cualquier presupuesto, cuando la persona no responde a tiempo, cuando abre demasiados hijos o cuando el router no puede decidir. De <code>escalated</code> solo sale por una decisión humana.</p>
 <figure><div class="scroll">
 <svg viewBox="0 0 1080 310" role="img" aria-label="Cadena de estados received a closed. Retornos a acting desde gating, reviewing y awaiting_human. Salto de assessing a applying cuando el riesgo es bajo. Un riel superior escalated recibe caídas desde acting, gating, reviewing, awaiting_human y watching.">
 <defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker>
@@ -384,13 +473,14 @@ td:first-child{font-weight:600;white-space:nowrap}
 </svg></div>
 <figcaption>El ticket es una proyección: los findings, decisiones y costos de cada intento viven en <code>ticket_events</code>, no en el ticket. Así un loop de tres intentos no hace crecer el objeto que leen el router y el humano.</figcaption>
 </figure>
+<div class="callout"><b>Por qué está así</b>La tabla de transiciones legales está en código (<code>TICKET_TRANSITIONS</code>) y el workflow la valida en cada paso; una transición que no está en la tabla es un bug, no un caso de negocio. El ticket en sí es una proyección: los hallazgos, las decisiones y los costos de cada intento viven en un log de eventos append-only. Así un ticket que dio tres vueltas no crece, y las métricas (costo por estación, tasa de escalados, acuerdo entre la persona y el riesgo estimado) salen de una consulta SQL.</div>
 </section>
 
-<!-- ───────────────────────── Fig 6 ───────────────────────── -->
-<section>
+<!-- ───────────── Fig 6 ───────────── -->
+<section id="decisiones">
 <p class="eyebrow">Fig. 6 · 01 §1.6 · 05</p>
-<h2>Decisiones de diseño y la alternativa que cada una descarta</h2>
-<p>Las que cambian respecto al brief original están marcadas. Todas siguen la lectura conservadora: más gates, menos autonomía.</p>
+<h2>Las decisiones ya tomadas y qué alternativa descartan</h2>
+<p>Si vas a discutir alguna, esta es la lista. Cada fila dice qué se eligió, qué se dejó de lado, por qué, y en qué archivo está. Las marcadas como propuesta son cambios respecto al brief original; todas siguen la misma lectura: ante la duda, más controles y menos autonomía.</p>
 <div class="tbl"><table>
 <thead><tr><th>Decisión</th><th>Elegido</th><th>Descartado</th><th>Por qué</th><th>Dónde vive</th></tr></thead>
 <tbody>
@@ -407,13 +497,21 @@ td:first-child{font-weight:600;white-space:nowrap}
 <tr><td>Critics LLM en MVP</td><td>Solo emiten <code>warn</code></td><td>Pueden bloquear</td><td>Un critic ruidoso no genera loops. El warn sube al humano.</td><td>04 §4.3, 01 §1.6</td></tr>
 <tr><td>Datos financieros</td><td><code>allowExternalLlm: false</code> hasta respuesta</td><td>Asumir que pueden salir</td><td>El runner accounting arranca con reglas. Bloqueante Q4.</td><td>examples/accounting/factory.yaml</td></tr>
 </tbody></table></div>
+<div class="qa">
+<h3>¿Por qué Temporal y no algo más simple?</h3>
+<p>Dos cosas que necesitamos son nativas en Temporal y son trabajo extra en las alternativas: una actividad de 20 a 60 minutos (el runner) con latidos de vida y cancelación, y colas separadas por carril con procesos separados, que es lo que hace posible que el runner no tenga credenciales. Si en la semana 1 no hay apetito de infraestructura, Inngest Cloud sirve con el mismo diseño; lo que cambia es el intérprete, no las piezas.</p>
+<h3>¿Por qué no un framework de agentes tipo LangGraph para todo esto?</h3>
+<p>Porque la máquina de estados, los reintentos, los presupuestos, la aprobación humana y las credenciales no son responsabilidades del agente. Un framework de agentes puede vivir <em>adentro</em> de un runner o de un inspector; el loop externo es del orquestador.</p>
+<h3>¿Y Jev?</h3>
+<p>Es un modelo cerrado que devuelve decisiones tipadas (elegir entre opciones, dar un puntaje, abstenerse) y no genera texto. Encaja exactamente en la abstracción <code>Decider</code> que usan router, critics y risk. No encaja en gates (no puede correr tests ni cuadrar un mayor) y por eso no es obligatorio: si no está disponible, reglas y un modelo con salida estructurada cubren el MVP.</p>
+</div>
 </section>
 
-<!-- ───────────────────────── Fig 7 ───────────────────────── -->
-<section>
+<!-- ───────────── Fig 7 ───────────── -->
+<section id="plan">
 <p class="eyebrow">Fig. 7 · 07-delivery-plan.md</p>
-<h2>Siete semanas, un camino crítico, accounting en paralelo</h2>
-<p>Accounting queda fuera del camino crítico a propósito: se construye desde la semana 4 sin tocar el control plane, y esa es la prueba del claim.</p>
+<h2>En qué orden se construye</h2>
+<p><strong>Qué estás mirando.</strong> Siete semanas más una de reserva. Las barras teal son el camino crítico: decisiones, contratos, el intérprete con un runner vacío, y después el pack de ingeniería estación por estación. La barra gris es el pack de contabilidad: arranca cuando el intérprete está listo, no depende de nada de ingeniería, y puede llevarla otra persona. Los tres hitos ámbar son los momentos en que hay algo para mostrar.</p>
 <figure><div class="scroll">
 <svg viewBox="0 0 900 330" role="img" aria-label="Cronograma de ocho semanas. Camino crítico: E0 semana 1, E1 semanas 1 a 2, E2 semanas 2 a 3, E3 semana 3, E4 semana 4, E6 semana 6, E7 semana 7. E5 accounting en semanas 4 a 5 en paralelo. Semana 8 buffer. Hitos: demo eng al final de la semana 4, demo accounting y diff cero al final de la 5, demoable al final de la 7.">
 <defs><marker id="a7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--muted)"/></marker></defs>
@@ -442,19 +540,58 @@ td:first-child{font-weight:600;white-space:nowrap}
 </svg></div>
 <figcaption>Barras teal: camino crítico. La barra gris de E5 arranca cuando E2 cierra y puede llevarla una segunda persona. Los hitos ámbar son los tres momentos en que se puede mostrar algo.</figcaption>
 </figure>
+<div class="callout"><b>Qué significa "demoable"</b>En una sola sesión y con un solo binario: un issue de GitHub llega a esperar aprobación con al menos una vuelta de gates visible, se aprueba y aparece un PR draft; una señal sintética abre un ticket hijo; un CSV de gastos llega a esperar aprobación con seis gates en verde; se aprueba y aparece un borrador de asientos; y el diff del control plane entre ambas demos está vacío. Además, un ticket forzado a fallar termina escalado en el segundo intento, no en el cuarto.</div>
+<div class="callout amber"><b>Decisiones de la semana 1</b>Orquestador (Temporal), runner real para ingeniería (Claude Code sin credenciales), layout (monorepo pnpm con un paquete de contratos publicable), storage (Postgres más blobs), egress de datos financieros (cerrado hasta que Finanzas responda) y ERP (stub JSON hasta saber cuál es). Cada una tiene un default si nadie objeta; están en el doc 07.</div>
 </section>
 
-<section>
+<!-- ───────────── Agregar dominio ───────────── -->
+<section id="nuevo">
+<p class="eyebrow">Si te toca enganchar un dominio nuevo</p>
+<h2>Lo mínimo que hay que escribir</h2>
+<p>Un <code>factory.yaml</code> con un intake, un carril, un runner (puede ser el vacío), al menos un gate, una política de riesgo con aprobadores, un applier en modo borrador, una matriz de monitoreo (puede ser toda "ninguno") y un presupuesto. Y un <code>flows/main.yaml</code> que los enlace. Con eso la línea entera corre con el runner vacío en segundos. El siguiente paso es reemplazar el runner por uno real y agregar gates de verdad. El esqueleto exacto está en el doc 06, sección 6.2, y el objetivo del runbook de la semana 7 es que alguien que no construyó la fábrica enganche un tercer dominio en menos de una hora.</p>
+</section>
+
+<!-- ───────────── Límites ───────────── -->
+<section id="limites">
+<p class="eyebrow">Lo que esta etapa no hace</p>
+<h2>Límites del MVP, a propósito</h2>
+<div class="two">
+<div><strong>Queda afuera</strong><ul>
+<li>Merge o posteo automático: apply solo crea borradores.</li>
+<li>Una fábrica de performance completa y un bot de incidentes real: el flow hijo solo investiga y propone.</li>
+<li>Varios repos federados, skills que se mejoran solas, entrenar o calibrar Jev.</li>
+<li>Interfaz web: toda la demo es por línea de comandos y por el log de eventos.</li>
+<li>Que la persona edite el artifact en el gate (el tipo lo reserva; la UX no está).</li>
+</ul></div>
+<div><strong>No se negocia</strong><ul>
+<li>Gates deterministas antes de cualquier inspector, siempre.</li>
+<li>Presupuesto obligatorio en toda receta.</li>
+<li>Persona requerida por defecto; una receta puede bajar el umbral hasta "bajo", nunca a "nunca".</li>
+<li>Runner sin secretos de escritura, verificado por test.</li>
+<li>Datos financieros no salen a un modelo externo hasta que Finanzas lo autorice.</li>
+</ul></div>
+</div>
+<div class="callout"><b>Las tres preguntas que más mueven el plan</b>Qué ERP usamos y si permite crear asientos sin postear. Si los datos de gastos pueden salir a un modelo externo, con qué enmascarado. Si ya hay Temporal y Postgres disponibles o hay que levantarlos. Las diez preguntas completas, con el default que se toma si nadie responde, están en el doc 08.</div>
+</section>
+
+<!-- ───────────── Mapa ───────────── -->
+<section id="mapa">
 <p class="eyebrow">Mapa</p>
-<h2>Qué archivo respalda cada figura</h2>
+<h2>Dónde está cada cosa en <code>docs/factory/</code></h2>
 <div class="map">
-<div><b>Fig. 1</b><span>01-framing.md · README.md (resumen ejecutivo)</span></div>
-<div><b>Fig. 2</b><span>04-ports-and-packs.md · 05-control-plane.md §5.4–5.6 · reference/contracts.ts §2, §9</span></div>
-<div><b>Fig. 3</b><span>05-control-plane.md §5.2–5.3 · issue 33 del plan</span></div>
-<div><b>Fig. 4</b><span>06-factory-yaml.md · reference/factory-schema.ts · reference/examples/**</span></div>
-<div><b>Fig. 5</b><span>03-domain-model.md · TICKET_TRANSITIONS en contracts.ts · reference/ticket-workflow.ts</span></div>
-<div><b>Fig. 6</b><span>01-framing.md §1.6 · 05-control-plane.md §5.1</span></div>
-<div><b>Fig. 7</b><span>07-delivery-plan.md · 08-open-questions.md</span></div>
+<div><b>README.md</b><span>índice y resumen ejecutivo</span></div>
+<div><b>01-framing.md</b><span>qué es y qué no, usuarios, métricas, riesgos, inconsistencias del brief</span></div>
+<div><b>02-mvp.md</b><span>el corte mínimo y la demo que lo prueba</span></div>
+<div><b>03-domain-model.md</b><span>tipos, estados, ticket versus evento</span></div>
+<div><b>04-ports-and-packs.md</b><span>los diez puertos y los dos packs estación por estación</span></div>
+<div><b>05-control-plane.md</b><span>Temporal, el intérprete, idempotencia, presupuestos, aprobación</span></div>
+<div><b>06-factory-yaml.md</b><span>schema y ejemplos de los yaml</span></div>
+<div><b>07-delivery-plan.md</b><span>épicas, issues por semana, decisiones de semana 1</span></div>
+<div><b>08-open-questions.md</b><span>las diez preguntas con su default</span></div>
+<div><b>reference/contracts.ts</b><span>tipos y puertos; compila con tsc</span></div>
+<div><b>reference/ticket-workflow.ts</b><span>el intérprete, en pseudo-Temporal</span></div>
+<div><b>reference/factory-schema.ts</b><span>schema zod de los yaml</span></div>
+<div><b>reference/examples/</b><span>factory.yaml y flows de eng y accounting</span></div>
 </div>
 </section>
 </main>

@@ -9,7 +9,7 @@ apply → watch → retrigger) con packs de dominio intercambiables (`eng`, `acc
 
 ## Orden de lectura
 
-Vista rápida: [overview.html](overview.html) tiene siete figuras (capas, grafo, workers y credenciales, resolver y packs, estados, decisiones descartadas, plan) con referencia al doc que respalda cada una.
+Si sos nuevo, empezá por [overview.html](overview.html): explica el problema desde cero, el vocabulario, un ticket paso a paso y las siete figuras con el por qué de cada decisión.
 
 | # | Archivo | Qué responde |
 |---|---------|--------------|
