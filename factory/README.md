@@ -111,6 +111,18 @@ Ojo además con que en Windmill una **variable** y un **resource** son cosas
 distintas. El flow referencia `variable('u/admin/claude_code_oauth_token')`: si
 solo creaste un resource con ese nombre, el paso 3 no lo encuentra.
 
+**Si lo que querías era que Claude te escriba los flows**, no hace falta
+Windmill AI: usá la fábrica contra sí misma. Corré `claude-run` apuntado al
+repo donde viven los yaml, con un prompt del estilo "agregá un flow que haga
+X". Te devuelve el diff, lo revisás y lo importás. Esto sí usa tu suscripción,
+porque invoca el binario de Claude Code, que es la superficie soportada para
+ese token, y de paso estrenás la fábrica con un caso real.
+
+La diferencia de fondo entre las dos cosas: **ejecutar el binario** de Claude
+Code con el token es el uso documentado y encaja en la salvedad del texto legal
+sobre el binario sin modificar. **Llamar a la Messages API** con ese mismo token
+desde otra aplicación no lo es, y además ni siquiera autentica.
+
 ## Aislamiento del agente
 
 Por defecto `USE_DOCKER=1` y el paso 3 corre en la imagen de `runner/`, con solo
