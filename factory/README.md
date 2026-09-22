@@ -91,6 +91,26 @@ correcto.
 `CLAUDE_CODE_OAUTH_TOKEN`, y la documentación lo recomienda para CI. Si algún
 día migramos a `--bare`, se pierde la opción de suscripción.
 
+**Esto no sirve para Windmill AI.** El asistente de la UI que te escribe
+scripts y flows es otra cosa, y necesita su propia credencial:
+
+| Para qué | Credencial | Dónde va en Windmill |
+|---|---|---|
+| El paso 3, el gasto grande | Token OAuth de suscripción | **Variable** secreta `u/admin/claude_code_oauth_token` |
+| Windmill AI, el asistente de la UI | API key de la Consola de Anthropic | **Resource** de Anthropic en AI providers |
+
+Dos motivos por los que no se puede reusar el token en AI providers. Windmill
+manda ese campo en el header `x-api-key`, que espera una key de Consola, y un
+token OAuth es un bearer, así que la API lo rechaza. Y forzarlo con los headers
+custom del resource es el patrón que Anthropic nombra explícitamente en su
+página de legal y compliance: el OAuth es solo para uso de Claude Code y apps
+nativas, y no se pueden almacenar ni intermediar credenciales de suscripción.
+El paso 3 sí es una vía soportada porque invoca al CLI de Claude Code.
+
+Ojo además con que en Windmill una **variable** y un **resource** son cosas
+distintas. El flow referencia `variable('u/admin/claude_code_oauth_token')`: si
+solo creaste un resource con ese nombre, el paso 3 no lo encuentra.
+
 ## Aislamiento del agente
 
 Por defecto `USE_DOCKER=1` y el paso 3 corre en la imagen de `runner/`, con solo
