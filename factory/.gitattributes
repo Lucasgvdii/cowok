@@ -1,0 +1,10 @@
+# Estos archivos terminan ejecutándose dentro de un contenedor Linux, o
+# embebidos como bash dentro del flow de Windmill. Un CRLF los rompe: el
+# shebang deja de resolver y cada línea termina con un \r invisible.
+# Se fuerza LF aunque el clone sea en Windows.
+*.sh        text eol=lf
+*.py        text eol=lf
+*.yaml      text eol=lf
+*.yml       text eol=lf
+Dockerfile  text eol=lf
+.env.example text eol=lf

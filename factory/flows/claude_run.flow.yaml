@@ -46,10 +46,15 @@ value:
         type: rawscript
         language: bash
         content: '!inline scripts/03_agent.sh'
+        # Se pasan las dos credenciales y el script elige. Creá ambas variables
+        # en Windmill aunque uses una sola: la que no uses, dejala vacía.
+        # El script prefiere el token OAuth y borra la API key del entorno,
+        # porque si no la API key gana por precedencia y te factura en silencio.
         input_transforms:
-          prompt:            { type: javascript, expr: flow_input.prompt }
-          anthropic_api_key: { type: javascript, expr: "variable('u/admin/anthropic_api_key')" }
-          permission_mode:   { type: static, value: acceptEdits }
+          prompt:           { type: javascript, expr: flow_input.prompt }
+          oauth_token:      { type: javascript, expr: "variable('u/admin/claude_code_oauth_token')" }
+          api_key:          { type: javascript, expr: "variable('u/admin/anthropic_api_key')" }
+          permission_mode:  { type: static, value: acceptEdits }
 
     - id: gates
       summary: "4 · gates"

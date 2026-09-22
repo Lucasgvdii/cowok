@@ -22,8 +22,11 @@ cp .env.example .env     # completá POSTGRES_PASSWORD
 Después, una vez, en la UI de `http://localhost:8000`:
 
 1. Crear el workspace `factory`.
-2. Variables → crear como **secretas**: `u/admin/anthropic_api_key`, y si hace
-   falta `u/admin/github_read_token` y `u/admin/github_write_token`.
+2. Variables → crear como **secretas**: la credencial del modelo, que es
+   `u/admin/claude_code_oauth_token` o `u/admin/anthropic_api_key` según el
+   modo que elijas más abajo, y si hace falta `u/admin/github_read_token` y
+   `u/admin/github_write_token`. Creá las dos del modelo aunque uses una sola,
+   y dejá vacía la que no uses.
 3. Importar el flow: `wmill sync push` con `flows/claude_run.built.yaml`, o
    crearlo a mano pegando cada `scripts/*.sh` en su paso.
 4. **Marcar el flow como "same worker".** Sin eso `./shared` no existe y los
@@ -50,6 +53,43 @@ Tres decisiones que están en el código y conviene no deshacer:
   reporta como `error` y cuenta como bloqueante, igual que un fallo.
 - **Cada gate corre en subshell.** Un `cd` no contamina al siguiente y un
   `exit` no mata el paso. Esto fue un bug real, encontrado probándolo.
+
+## Autenticación del modelo
+
+Dos modos. Llenás una de las dos variables y el paso 3 elige solo.
+
+| | Suscripción | API key |
+|---|---|---|
+| Variable | `u/admin/claude_code_oauth_token` | `u/admin/anthropic_api_key` |
+| De dónde sale | `claude setup-token` en tu máquina, imprime el token y no lo guarda | Consola de Anthropic |
+| Qué consume | Tu plan Pro, Max, Team o Enterprise | Facturación por token |
+| Vence | Un año, y no hay renovación automática documentada | No vence |
+
+**La trampa que cuesta una tarde.** `ANTHROPIC_API_KEY` tiene **más** precedencia
+que `CLAUDE_CODE_OAUTH_TOKEN`, y en modo `-p` el CLI la usa siempre que esté
+presente, sin avisar. Si dejás las dos seteadas creyendo que usás la
+suscripción, te facturan por API igual. Por eso el paso 3 borra explícitamente
+la variable del otro modo con `env -u` antes de invocar al CLI, y hay un test
+que lo comprueba con el entorno del worker contaminado a propósito.
+
+**El costo que reporta el paso deja de ser plata.** `total_cost_usd` lo calcula
+el CLI localmente contra una tabla de precios de lista, y no depende de cómo te
+autenticaste. Con suscripción vas a ver igual un número distinto de cero, pero
+ese dinero no se factura. Por eso la salida del paso ahora trae `billing`, que
+vale `subscription` o `api`: lo que consuma esos datos tiene que mirar ese campo
+antes de sumar. Conviene que confirmes empíricamente qué devuelve tu versión del
+CLI en el primer run.
+
+**El riesgo operativo de la suscripción.** El consumo sale del mismo pool que tu
+uso interactivo, con ventana rodante de 5 horas y ventana semanal. Una ráfaga de
+runs de la fábrica puede agotarte la ventana y dejarte sin Claude en la terminal.
+Con API key eso no pasa. Además el token queda atado a la persona que corrió
+`claude setup-token`, así que para algo compartido por un equipo la API key es lo
+correcto.
+
+**Una incompatibilidad a futuro.** El flag `--bare` no lee
+`CLAUDE_CODE_OAUTH_TOKEN`, y la documentación lo recomienda para CI. Si algún
+día migramos a `--bare`, se pierde la opción de suscripción.
 
 ## Aislamiento del agente
 
@@ -85,6 +125,7 @@ python3 bin/build-flow.py      # regenera flows/claude_run.built.yaml
 | | Estado |
 |---|---|
 | `04_gates.sh`, `05_collect.sh` | Probados contra un repo de prueba, incluidos los casos de fallo, de comando inexistente y de `cd` sucio |
+| Elección de credencial en `03_agent.sh` | Probada con un CLI simulado: con el entorno del worker contaminado, el modo suscripción recibe solo el token y el modo API key recibe solo la clave. Sin credencial, sale con código 2 |
 | `bin/build-flow.py` | Probado, genera el flow y valida que cada paso tenga su script |
 | Los `.sh` restantes | Sintaxis verificada. No ejecutados: necesitan red, Docker o un repo real |
 | `docker-compose.yml`, `runner/Dockerfile` | Escritos, no levantados en este entorno |

@@ -14,7 +14,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 src = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "flows/claude_run.flow.yaml"
-raw = src.read_text()
+# La codificación va explícita en todas las lecturas y escrituras: en Windows
+# el default es cp1252 y revienta con el primer acento de los comentarios.
+raw = src.read_text(encoding="utf-8")
 
 INLINE = re.compile(r"^(?P<indent>\s*)content:\s*'!inline (?P<path>[^']+)'\s*$", re.M)
 
@@ -33,7 +35,7 @@ def repl(m: re.Match) -> str:
     if not path.exists():
         missing.append(m.group("path"))
         return m.group(0)
-    return indent_block(path.read_text().rstrip("\n"), m.group("indent"))
+    return indent_block(path.read_text(encoding="utf-8").rstrip("\n"), m.group("indent"))
 
 
 out = INLINE.sub(repl, raw)
@@ -45,7 +47,7 @@ if INLINE.search(out):
     sys.exit("quedaron marcadores !inline sin resolver")
 
 dest = src.with_suffix("").with_suffix(".built.yaml")
-dest.write_text(out)
+dest.write_text(out, encoding="utf-8", newline="\n")
 
 # Verificación: que siga siendo YAML válido y que cada paso tenga su script.
 try:
