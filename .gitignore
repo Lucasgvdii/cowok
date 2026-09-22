@@ -1,1 +1,4 @@
 .claude
+factory/.env
+factory/shared/
+factory/out/

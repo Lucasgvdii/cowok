@@ -1,0 +1,124 @@
+# Flow "claude-run" — el recorrido mínimo de la fábrica.
+#
+#   trigger (UI / webhook / cron)
+#     → clone → setup → agente → gates → artifact → [PR draft]
+#
+# El `schema` de abajo es lo que genera el formulario de disparo en la UI de
+# Windmill: eso es tu "llamar a Claude cuando yo quiera".
+#
+# IMPORTANTE: same_worker: true. Sin eso, cada paso corre en un worker distinto
+# y el directorio ./shared no existe, así que los pasos no se pasan el repo.
+#
+# ESTADO: escrito contra la documentación de Windmill, NO verificado contra una
+# instancia corriendo. Si `wmill sync push` se queja del formato, lo más rápido
+# es crear el flow a mano en la UI y pegar el contenido de scripts/*.sh en cada
+# paso: los scripts sí están probados.
+summary: claude-run
+description: |
+  Clona un repo, corre el agente dentro de un contenedor sin credenciales,
+  pasa los gates y deja un diff. No mergea nada.
+value:
+  same_worker: true
+  modules:
+    - id: clone
+      summary: "1 · clone"
+      value:
+        type: rawscript
+        language: bash
+        content: '!inline scripts/01_clone.sh'
+        input_transforms:
+          repo:               { type: javascript, expr: flow_input.repo }
+          branch:             { type: javascript, expr: flow_input.branch }
+          github_read_token:  { type: javascript, expr: "variable('u/admin/github_read_token')" }
+
+    - id: setup
+      summary: "2 · setup"
+      value:
+        type: rawscript
+        language: bash
+        content: '!inline scripts/02_setup.sh'
+        input_transforms:
+          setup_cmd: { type: javascript, expr: flow_input.setup_cmd }
+
+    - id: agent
+      summary: "3 · agente"
+      value:
+        type: rawscript
+        language: bash
+        content: '!inline scripts/03_agent.sh'
+        input_transforms:
+          prompt:            { type: javascript, expr: flow_input.prompt }
+          anthropic_api_key: { type: javascript, expr: "variable('u/admin/anthropic_api_key')" }
+          permission_mode:   { type: static, value: acceptEdits }
+
+    - id: gates
+      summary: "4 · gates"
+      value:
+        type: rawscript
+        language: bash
+        content: '!inline scripts/04_gates.sh'
+        input_transforms:
+          gates_json: { type: javascript, expr: JSON.stringify(flow_input.gates) }
+
+    - id: collect
+      summary: "5 · artifact"
+      value:
+        type: rawscript
+        language: bash
+        content: '!inline scripts/05_collect.sh'
+        input_transforms: {}
+
+    # Paso 6, apagado por defecto. Es el único con credencial de escritura.
+    # Encendelo cuando quieras que el resultado salga como PR draft.
+    # - id: open_pr
+    #   summary: "6 · PR draft"
+    #   skip_if:
+    #     expr: "!flow_input.open_pr || !results.gates.passed"
+    #   value:
+    #     type: rawscript
+    #     language: bash
+    #     content: '!inline scripts/06_open_pr.sh'
+    #     input_transforms:
+    #       repo:                { type: javascript, expr: flow_input.repo }
+    #       base_branch:         { type: javascript, expr: flow_input.branch }
+    #       title:               { type: javascript, expr: flow_input.prompt.slice(0, 72) }
+    #       github_write_token:  { type: javascript, expr: "variable('u/admin/github_write_token')" }
+    #       run_id:              { type: javascript, expr: flow_input.run_id ?? Date.now().toString(36) }
+
+schema:
+  $schema: "https://json-schema.org/draft/2020-12/schema"
+  type: object
+  required: [repo, prompt]
+  order: [repo, branch, prompt, setup_cmd, gates, open_pr]
+  properties:
+    repo:
+      type: string
+      description: "owner/name del repo"
+      default: "acme/sandbox"
+    branch:
+      type: string
+      default: "main"
+    prompt:
+      type: string
+      description: "Qué querés que haga el agente"
+      format: textarea
+    setup_cmd:
+      type: string
+      description: "Cómo se preparan las dependencias"
+      default: "pnpm install --frozen-lockfile"
+    gates:
+      type: array
+      description: "Comandos deterministas que validan el resultado"
+      default:
+        - { id: typecheck, run: "pnpm typecheck" }
+        - { id: test,      run: "pnpm test" }
+        - { id: lint,      run: "pnpm lint" }
+      items:
+        type: object
+        properties:
+          id:  { type: string }
+          run: { type: string }
+    open_pr:
+      type: boolean
+      description: "Abrir PR draft con el resultado"
+      default: false

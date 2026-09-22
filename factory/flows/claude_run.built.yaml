@@ -1,0 +1,309 @@
+# Flow "claude-run" — el recorrido mínimo de la fábrica.
+#
+#   trigger (UI / webhook / cron)
+#     → clone → setup → agente → gates → artifact → [PR draft]
+#
+# El `schema` de abajo es lo que genera el formulario de disparo en la UI de
+# Windmill: eso es tu "llamar a Claude cuando yo quiera".
+#
+# IMPORTANTE: same_worker: true. Sin eso, cada paso corre en un worker distinto
+# y el directorio ./shared no existe, así que los pasos no se pasan el repo.
+#
+# ESTADO: escrito contra la documentación de Windmill, NO verificado contra una
+# instancia corriendo. Si `wmill sync push` se queja del formato, lo más rápido
+# es crear el flow a mano en la UI y pegar el contenido de scripts/*.sh en cada
+# paso: los scripts sí están probados.
+summary: claude-run
+description: |
+  Clona un repo, corre el agente dentro de un contenedor sin credenciales,
+  pasa los gates y deja un diff. No mergea nada.
+value:
+  same_worker: true
+  modules:
+    - id: clone
+      summary: "1 · clone"
+      value:
+        type: rawscript
+        language: bash
+        content: |
+          #!/usr/bin/env bash
+          # Paso 1 · clone
+          # Credenciales: github_read_token (solo lectura). El agente NO ve este token.
+          repo="$1"                 # "owner/name"
+          branch="${2:-main}"
+          github_read_token="${3:-}"
+
+          set -euo pipefail
+          source "$(dirname "$0")/_lib.sh" 2>/dev/null || true
+          shared_dir() { mkdir -p ./shared && (cd ./shared && pwd); }
+          DEST="$(shared_dir)/repo"
+
+          rm -rf "$DEST"; mkdir -p "$DEST"
+
+          if [ -n "$github_read_token" ]; then
+            URL="https://x-access-token:${github_read_token}@github.com/${repo}.git"
+          else
+            URL="https://github.com/${repo}.git"
+          fi
+
+          git clone --depth 1 --branch "$branch" "$URL" "$DEST" >&2
+          # No dejamos el token escrito en .git/config
+          git -C "$DEST" remote set-url origin "https://github.com/${repo}.git"
+
+          SHA="$(git -C "$DEST" rev-parse HEAD)"
+          FILES="$(git -C "$DEST" ls-files | wc -l | tr -d ' ')"
+          printf '{"repo":"%s","branch":"%s","base_sha":"%s","files":%s,"path":"%s"}\n' \
+            "$repo" "$branch" "$SHA" "$FILES" "$DEST"
+        input_transforms:
+          repo:               { type: javascript, expr: flow_input.repo }
+          branch:             { type: javascript, expr: flow_input.branch }
+          github_read_token:  { type: javascript, expr: "variable('u/admin/github_read_token')" }
+
+    - id: setup
+      summary: "2 · setup"
+      value:
+        type: rawscript
+        language: bash
+        content: |
+          #!/usr/bin/env bash
+          # Paso 2 · setup del entorno (instalar dependencias, generar lo que haga falta)
+          setup_cmd="${1:-pnpm install --frozen-lockfile}"
+
+          set -euo pipefail
+          DEST="$(cd ./shared/repo && pwd)"
+          cd "$DEST"
+
+          START=$(date +%s)
+          if eval "$setup_cmd" >"../setup.log" 2>&1; then STATUS=ok; CODE=0
+          else CODE=$?; STATUS=fail; fi
+          END=$(date +%s)
+
+          tail -n 40 ../setup.log >&2 || true
+          printf '{"status":"%s","exit_code":%s,"seconds":%s,"cmd":%s}\n' \
+            "$STATUS" "$CODE" "$((END-START))" "$(printf '%s' "$setup_cmd" | jq -R .)"
+        input_transforms:
+          setup_cmd: { type: javascript, expr: flow_input.setup_cmd }
+
+    - id: agent
+      summary: "3 · agente"
+      value:
+        type: rawscript
+        language: bash
+        content: |
+          #!/usr/bin/env bash
+          # Paso 3 · el agente
+          #
+          # Esta es la única parte del flow donde corre un modelo, y es el paso más
+          # peligroso, así que es el más acotado:
+          #   - corre dentro de un contenedor con SOLO el repo montado en /work
+          #   - recibe SOLO ANTHROPIC_API_KEY. Sin token de git, sin nada más
+          #   - tiene timeout, tope de memoria y de CPU
+          #   - escribe con tu uid, así los pasos siguientes pueden leer lo que dejó
+          #
+          # Con USE_DOCKER=0 corre directo en el worker: más simple, sin aislamiento.
+          prompt="$1"
+          anthropic_api_key="$2"
+          permission_mode="${3:-acceptEdits}"
+
+          set -euo pipefail
+          SHARED="$(cd ./shared && pwd)"
+          DEST="$SHARED/repo"
+          OUT="$SHARED/agent.json"
+
+          USE_DOCKER="${USE_DOCKER:-1}"
+          RUNNER_IMAGE="${RUNNER_IMAGE:-factory-runner:1}"
+          TIMEOUT="${AGENT_TIMEOUT_SECONDS:-3600}"
+          MEM="${AGENT_MEMORY:-4g}"
+          CPUS="${AGENT_CPUS:-2}"
+
+          run_claude_in_docker() {
+            docker run --rm \
+              --user "$(id -u):$(id -g)" \
+              --memory "$MEM" --cpus "$CPUS" \
+              --pids-limit 512 \
+              --security-opt no-new-privileges \
+              -v "$DEST:/work" -w /work \
+              -e ANTHROPIC_API_KEY="$anthropic_api_key" \
+              -e HOME=/tmp \
+              "$RUNNER_IMAGE" \
+              timeout --signal=TERM --kill-after=30 "$TIMEOUT" \
+                claude -p "$prompt" --permission-mode "$permission_mode" --output-format json
+          }
+
+          run_claude_local() {
+            ( cd "$DEST" \
+              && ANTHROPIC_API_KEY="$anthropic_api_key" \
+                 timeout --signal=TERM --kill-after=30 "$TIMEOUT" \
+                 claude -p "$prompt" --permission-mode "$permission_mode" --output-format json )
+          }
+
+          CODE=0
+          if [ "$USE_DOCKER" = "1" ] && [ -S /var/run/docker.sock ]; then
+            MODE=docker; run_claude_in_docker >"$OUT" 2>"$SHARED/agent.log" || CODE=$?
+          else
+            MODE=local;  run_claude_local     >"$OUT" 2>"$SHARED/agent.log" || CODE=$?
+          fi
+
+          tail -n 30 "$SHARED/agent.log" >&2 || true
+
+          # El CLI devuelve JSON con uso y costo. Si el formato cambia, no rompemos el
+          # paso: cada campo cae a null por separado.
+          COST=$(jq -r '.total_cost_usd // .cost_usd // empty' "$OUT" 2>/dev/null || true)
+          TURNS=$(jq -r '.num_turns // empty' "$OUT" 2>/dev/null || true)
+          MS=$(jq -r '.duration_ms // empty' "$OUT" 2>/dev/null || true)
+          CHANGED=$(git -C "$DEST" status --porcelain | wc -l | tr -d ' ')
+
+          printf '{"mode":"%s","exit_code":%s,"cost_usd":%s,"turns":%s,"duration_ms":%s,"files_changed":%s,"raw":"%s"}\n' \
+            "$MODE" "${CODE:-0}" "${COST:-null}" "${TURNS:-null}" "${MS:-null}" "$CHANGED" "$OUT"
+        input_transforms:
+          prompt:            { type: javascript, expr: flow_input.prompt }
+          anthropic_api_key: { type: javascript, expr: "variable('u/admin/anthropic_api_key')" }
+          permission_mode:   { type: static, value: acceptEdits }
+
+    - id: gates
+      summary: "4 · gates"
+      value:
+        type: rawscript
+        language: bash
+        content: |
+          #!/usr/bin/env bash
+          # Paso 4 · gates
+          #
+          # Un gate es un comando que corre en el repo y termina con un código de salida.
+          # Nada más. Determinista, sin modelo. Si un gate no puede correr, eso NO es
+          # pass: se reporta como "error" y bloquea igual que un fallo.
+          #
+          # Entrada: JSON array. Ej:
+          #   [{"id":"typecheck","run":"pnpm typecheck"},
+          #    {"id":"test","run":"pnpm test"},
+          #    {"id":"lint","run":"pnpm lint"}]
+          #
+          # Salida: un resumen con el estado de cada gate. La v1 de esto emite SARIF por
+          # gate para que los hallazgos vuelvan tipados al agente. Todavía no.
+          gates_json="${1:-[]}"
+
+          set -euo pipefail
+          SHARED="$(cd ./shared && pwd)"
+          DEST="$SHARED/repo"
+          LOGS="$SHARED/gates"; mkdir -p "$LOGS"
+          cd "$DEST"
+
+          RESULTS="[]"
+          BLOCKING=0
+
+          COUNT=$(printf '%s' "$gates_json" | jq 'length')
+          for i in $(seq 0 $((COUNT-1))); do
+            ID=$(printf '%s' "$gates_json"  | jq -r ".[$i].id")
+            CMD=$(printf '%s' "$gates_json" | jq -r ".[$i].run")
+            LOG="$LOGS/$ID.log"
+
+            START=$(date +%s)
+            # Subshell a propósito: aísla un `cd` del gate y evita que un `exit` dentro
+            # del comando mate el paso entero.
+            CODE=0
+            ( eval "$CMD" ) >"$LOG" 2>&1 || CODE=$?
+            # 126 y 127 significan "no se pudo ejecutar", que no es lo mismo que
+            # "corrió y falló". Un gate que no corre nunca cuenta como pass.
+            if   [ "$CODE" -eq 0 ];   then STATUS=pass
+            elif [ "$CODE" -ge 126 ]; then STATUS=error
+            else                           STATUS=fail
+            fi
+            END=$(date +%s)
+
+            [ "$STATUS" = "pass" ] || BLOCKING=$((BLOCKING+1))
+
+            TAIL=$(tail -c 4000 "$LOG" | jq -Rs .)
+            RESULTS=$(printf '%s' "$RESULTS" | jq -c \
+              --arg id "$ID" --arg st "$STATUS" --argjson code "$CODE" \
+              --argjson secs "$((END-START))" --argjson tail "$TAIL" \
+              '. + [{id:$id,status:$st,exit_code:$code,seconds:$secs,log_tail:$tail}]')
+
+            printf '[gate] %-12s %s (exit %s, %ss)\n' "$ID" "$STATUS" "$CODE" "$((END-START))" >&2
+          done
+
+          printf '%s' "$RESULTS" | jq -c --argjson blocking "$BLOCKING" \
+            '{gates: ., blocking: $blocking, passed: ($blocking == 0)}'
+        input_transforms:
+          gates_json: { type: javascript, expr: JSON.stringify(flow_input.gates) }
+
+    - id: collect
+      summary: "5 · artifact"
+      value:
+        type: rawscript
+        language: bash
+        content: |
+          #!/usr/bin/env bash
+          # Paso 5 · recoger el artifact
+          # El agente no publica nada: deja un diff. Esto lo empaqueta y lo describe.
+          set -euo pipefail
+          SHARED="$(cd ./shared && pwd)"
+          DEST="$SHARED/repo"
+          PATCH="$SHARED/patch.diff"
+
+          git -C "$DEST" add -A
+          git -C "$DEST" diff --cached > "$PATCH"
+
+          BASE=$(git -C "$DEST" rev-parse HEAD)
+          FILES=$(git -C "$DEST" diff --cached --name-only | jq -R . | jq -sc .)
+          STAT=$(git -C "$DEST" diff --cached --shortstat | tr -d '\n')
+          BYTES=$(wc -c < "$PATCH" | tr -d ' ')
+          DIGEST=$( (sha256sum "$PATCH" 2>/dev/null || shasum -a 256 "$PATCH") | cut -d' ' -f1 )
+
+          printf '{"kind":"patch","base_sha":"%s","files":%s,"shortstat":%s,"bytes":%s,"digest":"%s","path":"%s"}\n' \
+            "$BASE" "$FILES" "$(printf '%s' "$STAT" | jq -R .)" "$BYTES" "$DIGEST" "$PATCH"
+        input_transforms: {}
+
+    # Paso 6, apagado por defecto. Es el único con credencial de escritura.
+    # Encendelo cuando quieras que el resultado salga como PR draft.
+    # - id: open_pr
+    #   summary: "6 · PR draft"
+    #   skip_if:
+    #     expr: "!flow_input.open_pr || !results.gates.passed"
+    #   value:
+    #     type: rawscript
+    #     language: bash
+    #     content: '!inline scripts/06_open_pr.sh'
+    #     input_transforms:
+    #       repo:                { type: javascript, expr: flow_input.repo }
+    #       base_branch:         { type: javascript, expr: flow_input.branch }
+    #       title:               { type: javascript, expr: flow_input.prompt.slice(0, 72) }
+    #       github_write_token:  { type: javascript, expr: "variable('u/admin/github_write_token')" }
+    #       run_id:              { type: javascript, expr: flow_input.run_id ?? Date.now().toString(36) }
+
+schema:
+  $schema: "https://json-schema.org/draft/2020-12/schema"
+  type: object
+  required: [repo, prompt]
+  order: [repo, branch, prompt, setup_cmd, gates, open_pr]
+  properties:
+    repo:
+      type: string
+      description: "owner/name del repo"
+      default: "acme/sandbox"
+    branch:
+      type: string
+      default: "main"
+    prompt:
+      type: string
+      description: "Qué querés que haga el agente"
+      format: textarea
+    setup_cmd:
+      type: string
+      description: "Cómo se preparan las dependencias"
+      default: "pnpm install --frozen-lockfile"
+    gates:
+      type: array
+      description: "Comandos deterministas que validan el resultado"
+      default:
+        - { id: typecheck, run: "pnpm typecheck" }
+        - { id: test,      run: "pnpm test" }
+        - { id: lint,      run: "pnpm lint" }
+      items:
+        type: object
+        properties:
+          id:  { type: string }
+          run: { type: string }
+    open_pr:
+      type: boolean
+      description: "Abrir PR draft con el resultado"
+      default: false

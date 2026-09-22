@@ -1,0 +1,60 @@
+# Fábrica mínima: Windmill + Postgres.
+# Levantar:  cp .env.example .env && edita .env && docker compose up -d
+# UI:        http://localhost:8000   (usuario inicial admin@windmill.dev / changeme)
+#
+# NOTA: esta compose está recortada a lo mínimo (sin caddy, sin lsp, sin worker nativo).
+# Si algo no arranca, compará contra la compose oficial de windmill-labs/windmill.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-windmill}
+      POSTGRES_DB: windmill
+      POSTGRES_USER: windmill
+    volumes: [db_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U windmill"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  server:
+    image: ${WM_IMAGE:-ghcr.io/windmill-labs/windmill:main}
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://windmill:${POSTGRES_PASSWORD:-windmill}@db/windmill?sslmode=disable
+      MODE: server
+      BASE_URL: ${BASE_URL:-http://localhost:8000}
+    ports: ["8000:8000"]
+
+  # Worker de la fábrica. Monta el socket de Docker para poder correr el agente
+  # dentro de un contenedor aislado (ver scripts/03_agent.sh y el README).
+  #
+  # AVISO: montar el socket le da a este worker acceso equivalente a root sobre
+  # el host. Es aceptable en un server dedicado a la fábrica y NO lo es en una
+  # máquina compartida. Si no querés eso, sacá el volumen y poné USE_DOCKER=0.
+  worker:
+    image: ${WM_IMAGE:-ghcr.io/windmill-labs/windmill:main}
+    restart: unless-stopped
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://windmill:${POSTGRES_PASSWORD:-windmill}@db/windmill?sslmode=disable
+      MODE: worker
+      WORKER_GROUP: default
+      KEEP_JOB_DIR: "false"
+      USE_DOCKER: ${USE_DOCKER:-1}
+      RUNNER_IMAGE: ${RUNNER_IMAGE:-factory-runner:1}
+      AGENT_TIMEOUT_SECONDS: ${AGENT_TIMEOUT_SECONDS:-3600}
+      AGENT_MEMORY: ${AGENT_MEMORY:-4g}
+      AGENT_CPUS: ${AGENT_CPUS:-2}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - worker_cache:/tmp/windmill/cache
+
+volumes:
+  db_data:
+  worker_cache:
