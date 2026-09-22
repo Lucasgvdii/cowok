@@ -33,6 +33,22 @@ Después, una vez, en la UI de `http://localhost:8000`:
    pasos no se pasan el repo entre sí. Es el error número uno.
 5. Disparar desde el formulario del flow.
 
+## Errores comunes al configurar
+
+Los dos primeros no son de la fábrica: son de **Windmill AI**, el asistente del
+editor, que es otra función y necesita su propia API key de Consola. Si no lo
+vas a usar, dejalo apagado y ninguno de los dos aparece.
+
+| Síntoma | Qué pasa | Qué hacer |
+|---|---|---|
+| El botón "test key" del recurso Anthropic falla | El recurso valida mandando `x-api-key`. Un token OAuth de suscripción no es una API key, así que lo rechazan. El botón funciona bien | Para la fábrica no hace falta ese recurso |
+| `404 Not found: Could not find the resource u/admin/...` | Workspace settings apunta a una ruta de recurso que no existe. Windmill guarda la ruta como texto y no valida hasta usarla | Apagá Windmill AI, o creá el recurso con una API key real. Con el token de suscripción el 404 solo se convierte en 401 |
+| El paso 3 falla al resolver sus entradas | Falta alguna de las dos variables. El flow pide las dos siempre | Creá `u/admin/anthropic_api_key` aunque quede vacía |
+| El paso 2 no encuentra el repo | El flow no está marcado como *same worker*, así que `./shared` no existe | Marcalo en la configuración del flow |
+
+La fábrica **no usa recursos ni AI providers**. Solo variables. Si estás peleando
+con un recurso, estás en la pantalla equivocada.
+
 ## Los cinco pasos
 
 | Paso | Qué hace | Credenciales que ve |
