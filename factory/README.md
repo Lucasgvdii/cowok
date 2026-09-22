@@ -22,11 +22,10 @@ cp .env.example .env     # completá POSTGRES_PASSWORD
 Después, una vez, en la UI de `http://localhost:8000`:
 
 1. Crear el workspace `factory`.
-2. Variables → crear como **secretas**: la credencial del modelo, que es
-   `u/admin/claude_code_oauth_token` o `u/admin/anthropic_api_key` según el
-   modo que elijas más abajo, y si hace falta `u/admin/github_read_token` y
-   `u/admin/github_write_token`. Creá las dos del modelo aunque uses una sola,
-   y dejá vacía la que no uses.
+2. Variables → crear **una sola**, secreta: `u/admin/claude_code_oauth_token`,
+   con lo que imprime `claude setup-token`. Eso alcanza para arrancar contra un
+   repo público. Los otros modos, API key en vez de suscripción y repo privado,
+   son un cambio de dos líneas en el flow y están comentados ahí mismo.
 3. Importar el flow: `wmill sync push` con `flows/claude_run.built.yaml`, o
    crearlo a mano pegando cada `scripts/*.sh` en su paso.
 4. **Marcar el flow como "same worker".** Sin eso `./shared` no existe y los
@@ -43,7 +42,7 @@ vas a usar, dejalo apagado y ninguno de los dos aparece.
 |---|---|---|
 | El botón "test key" del recurso Anthropic falla | El recurso valida mandando `x-api-key`. Un token OAuth de suscripción no es una API key, así que lo rechazan. El botón funciona bien | Para la fábrica no hace falta ese recurso |
 | `404 Not found: Could not find the resource u/admin/...` | Workspace settings apunta a una ruta de recurso que no existe. Windmill guarda la ruta como texto y no valida hasta usarla | Apagá Windmill AI, o creá el recurso con una API key real. Con el token de suscripción el 404 solo se convierte en 401 |
-| El paso 3 falla al resolver sus entradas | Falta alguna de las dos variables. El flow pide las dos siempre | Creá `u/admin/anthropic_api_key` aunque quede vacía |
+| El paso 3 falla al resolver sus entradas | Falta la variable del token | Es la única que el flow exige: `u/admin/claude_code_oauth_token` |
 | El paso 2 no encuentra el repo | El flow no está marcado como *same worker*, así que `./shared` no existe | Marcalo en la configuración del flow |
 
 La fábrica **no usa recursos ni AI providers**. Solo variables. Si estás peleando

@@ -26,10 +26,14 @@ value:
         type: rawscript
         language: bash
         content: '!inline scripts/01_clone.sh'
+        # Token vacío por defecto: alcanza para repos públicos, y así arrancás
+        # sin crear ninguna variable de git. Para un repo privado, cambiá la
+        # última línea por:
+        #   github_read_token: { type: javascript, expr: "variable('u/admin/github_read_token')" }
         input_transforms:
           repo:               { type: javascript, expr: flow_input.repo }
           branch:             { type: javascript, expr: flow_input.branch }
-          github_read_token:  { type: javascript, expr: "variable('u/admin/github_read_token')" }
+          github_read_token:  { type: static, value: "" }
 
     - id: setup
       summary: "2 · setup"
@@ -46,14 +50,20 @@ value:
         type: rawscript
         language: bash
         content: '!inline scripts/03_agent.sh'
-        # Se pasan las dos credenciales y el script elige. Creá ambas variables
-        # en Windmill aunque uses una sola: la que no uses, dejala vacía.
+        # Modo suscripción, que es el default: solo hace falta UNA variable,
+        # u/admin/claude_code_oauth_token. La otra va vacía y fija, así no
+        # tenés que crear una variable de mentira solo para que resuelva.
+        #
+        # Para pasar a API key, cambiá las dos líneas de credencial por:
+        #   oauth_token: { type: static, value: "" }
+        #   api_key:     { type: javascript, expr: "variable('u/admin/anthropic_api_key')" }
+        #
         # El script prefiere el token OAuth y borra la API key del entorno,
         # porque si no la API key gana por precedencia y te factura en silencio.
         input_transforms:
           prompt:           { type: javascript, expr: flow_input.prompt }
           oauth_token:      { type: javascript, expr: "variable('u/admin/claude_code_oauth_token')" }
-          api_key:          { type: javascript, expr: "variable('u/admin/anthropic_api_key')" }
+          api_key:          { type: static, value: "" }
           permission_mode:  { type: static, value: acceptEdits }
 
     - id: gates
