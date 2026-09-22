@@ -136,6 +136,26 @@ la fábrica; no lo es en una máquina compartida. Si preferís evitarlo, poné
 aislamiento. La alternativa buena, worker groups, es una función de pago de
 Windmill.
 
+**Pendiente de evaluar: Windmill trae un sandbox de agente nativo.** El worker
+de esta instancia ya tiene `nsjail`, `node` y `bun`, así que la maquinaria está
+disponible incluso en la edición comunitaria. Si ese sandbox aísla filesystem y
+procesos por sí solo, **el socket de Docker sobra** y eso es la mejora más
+valiosa disponible. Antes de migrar hay que confirmar dos cosas contra la UI:
+si expone topes de memoria, CPU y procesos, porque el `docker run` de acá sí los
+pone, y si se puede combinar con invocar el binario y la variable de OAuth, ya
+que la plantilla nativa viene cableada a API key.
+
+**La trampa al migrar:** el directorio compartido entre pasos y un volumen
+persistente **no son lo mismo**. `./shared` con `same_worker` pasa el repo de un
+paso al siguiente dentro de **una** corrida. Un volumen persiste **entre**
+corridas. Cambiar uno por otro rompe la cadena clone, setup, agente, gates.
+
+**Y la reanudación de sesión no es un objetivo.** El agente arranca en frío a
+propósito: el diseño dice que cada intento recibe hallazgos tipados, no
+historial de conversación. Reanudar la sesión entre intentos devuelve por la
+ventana lo que se sacó por la puerta. Sirve para recuperarse de un corte a mitad
+de un intento, no para encadenarlos.
+
 ## Versionar los flows
 
 El git sync automático de Windmill es de pago. `bin/export-to-git.sh` hace lo
