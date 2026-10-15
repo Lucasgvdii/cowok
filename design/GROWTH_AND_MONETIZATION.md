@@ -569,6 +569,8 @@ flowchart LR
 
 ## 13. Modelo de negocio de Tirada
 
+> **Sustituido.** Esta sección describe el modelo inicial por tamaño de lista. El modelo vigente (precio por volumen de envío, tres planes por nivel de soporte, tickets y dominio propio) está en [BUSINESS_MODEL.md](BUSINESS_MODEL.md). Se conserva como referencia de las decisiones de la red de anuncios y recomendaciones.
+
 ### 13.1 Lo que cobramos y lo que no
 
 | Fuente | Cobro de Tirada |

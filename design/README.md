@@ -9,6 +9,8 @@ Este directorio responde al reto del founder de beehiiv: *"esta es la lista de c
 | Documento | Qué cubre |
 |---|---|
 | [README.md](README.md) | Tesis, principios y las decisiones de fondo (este archivo) |
+| [MODULAR_ARCHITECTURE.md](MODULAR_ARCHITECTURE.md) | **Cómo se construye de verdad:** módulos con adaptadores intercambiables y niveles de despliegue de menos a más gasto |
+| [BUSINESS_MODEL.md](BUSINESS_MODEL.md) | **Modelo de negocio vigente:** precio por volumen de envío, tres planes por nivel de soporte, tickets, dominio propio |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Stack, servicios, modelo de datos, bus de eventos, multi-tenancy, escalado |
 | [DELIVERABILITY.md](DELIVERABILITY.md) | MTA propio, IPs, warming, bounces, supresiones, feedback loops, bots |
 | [EDITOR.md](EDITOR.md) | Modelo de documento único, colaboración, renderers email/web/audio, plantillas |
@@ -19,6 +21,16 @@ Este directorio responde al reto del founder de beehiiv: *"esta es la lista de c
 | [ROADMAP.md](ROADMAP.md) | Fases, equipo, costes y lo que **no** haríamos |
 | [COVERAGE.md](COVERAGE.md) | Matriz: cada línea del backlog del founder → módulo → fase |
 | [prototype/](prototype/index.html) | Prototipo navegable del dashboard (solo desktop) |
+
+## Estrategia actual: construir en grande, desplegar en pequeño
+
+Los documentos de arquitectura, entregabilidad, build vs. buy y roadmap describen el **destino**: la plataforma completa a escala de beehiiv, con un equipo de ~65 personas. Después de escribirlos se decidió cómo llegar ahí sin capital, con un founder solo y agentes de IA haciendo el desarrollo y el mantenimiento:
+
+- **El código se construye completo y modular**, con la arquitectura del diseño grande: un solo documento, eventos para todo, API primero, MCP.
+- **La infraestructura empieza en lo mínimo** (Hetzner, Postgres, Amazon SES, Cloudflare gratis) y cada pieza sube de nivel solo cuando un número lo justifica y los ingresos cubren el nuevo coste. Ver [MODULAR_ARCHITECTURE.md](MODULAR_ARCHITECTURE.md).
+- **El modelo de negocio** cambia de "precio por tamaño de lista" a **precio por volumen de envío** con tres planes según el nivel de soporte. Ver [BUSINESS_MODEL.md](BUSINESS_MODEL.md), que sustituye a la sección de modelo de negocio de [GROWTH_AND_MONETIZATION.md](GROWTH_AND_MONETIZATION.md).
+
+Donde un documento antiguo contradiga a estos dos, mandan estos dos.
 
 ---
 
@@ -40,7 +52,7 @@ Por eso Tirada se diseña de abajo hacia arriba:
 3. **API-first de verdad.** El dashboard usa la misma API pública que los clientes. El servidor MCP y el SDK se generan del mismo OpenAPI. Si el dashboard puede hacerlo, la API puede.
 4. **Los clics importan, las aperturas no tanto.** Desde Apple Mail Privacy Protection, la tasa de apertura es una métrica inflada. Reportamos *aperturas verificadas* (excluyendo MPP y escáneres) aparte de las brutas, y la métrica norte del producto es el **clic humano verificado**.
 5. **La reputación es compartida, así que se protege por defecto.** Supresión automática de inactivos (sunset policy) activada por defecto, kill-switch automático si la tasa de quejas supera 0,1 %, y publicaciones nuevas en un pool "en periodo de prueba" hasta que demuestran calidad de lista. Al cliente le duele un poco; a todos los demás les salva.
-6. **0 % de comisión, siempre.** El negocio es la suscripción SaaS por tamaño de lista + revenue share de la ad network. Nunca un % de las ventas del creador. Stripe Connect con el creador como merchant.
+6. **0 % de comisión, siempre.** El negocio es una cuota base más el volumen de envío (ver [BUSINESS_MODEL.md](BUSINESS_MODEL.md)) y, más adelante, el revenue share de la ad network. Nunca un % de las ventas del creador. Stripe Connect con el creador como merchant.
 7. **Construir el núcleo, comprar los commodities.** Construimos lo que es moat (MTA y reputación, validación de emails, filtrado de bots, renderer, segmentación, ad network). Compramos lo que es commodity o infraestructura física (pagos, CDN, streaming de vídeo, LLMs, observabilidad).
 8. **Pocas piezas, pocos lenguajes.** TypeScript para producto, Go para los caminos calientes (tracking, ingesta), KumoMTA (Rust + Lua) para el envío. Postgres, ClickHouse, Redpanda, Valkey, Temporal. Nada más sin una razón escrita.
 9. **Seguro por defecto para lectores.** Magic links de un solo uso con expiración en minutos, comparaciones en tiempo constante, rate limiting en cada endpoint público, HTML de usuario sanitizado siempre.
@@ -48,6 +60,8 @@ Por eso Tirada se diseña de abajo hacia arriba:
 11. **La IA es un usuario más, no una feature aparte.** El agente interno y los agentes externos (Claude, ChatGPT vía MCP) operan con los mismos permisos, la misma API y el mismo audit log que un humano con ese rol.
 
 ## Decisiones de fondo (resumen)
+
+Esta tabla describe el **nivel final** (N4). El punto de partida y los pasos intermedios están en [MODULAR_ARCHITECTURE.md](MODULAR_ARCHITECTURE.md).
 
 | Área | Decisión | Por qué |
 |---|---|---|
