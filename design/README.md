@@ -18,6 +18,7 @@ Este directorio responde al reto del founder de beehiiv: *"esta es la lista de c
 | [BUILD_VS_BUY.md](BUILD_VS_BUY.md) | La factura de proveedores del founder, línea a línea: qué compramos y qué no |
 | [ROADMAP.md](ROADMAP.md) | Fases, equipo, costes y lo que **no** haríamos |
 | [COVERAGE.md](COVERAGE.md) | Matriz: cada línea del backlog del founder → módulo → fase |
+| [prototype/](prototype/index.html) | Prototipo navegable del dashboard (solo desktop) |
 
 ---
 
@@ -43,7 +44,8 @@ Por eso Tirada se diseña de abajo hacia arriba:
 7. **Construir el núcleo, comprar los commodities.** Construimos lo que es moat (MTA y reputación, validación de emails, filtrado de bots, renderer, segmentación, ad network). Compramos lo que es commodity o infraestructura física (pagos, CDN, streaming de vídeo, LLMs, observabilidad).
 8. **Pocas piezas, pocos lenguajes.** TypeScript para producto, Go para los caminos calientes (tracking, ingesta), KumoMTA (Rust + Lua) para el envío. Postgres, ClickHouse, Redpanda, Valkey, Temporal. Nada más sin una razón escrita.
 9. **Seguro por defecto para lectores.** Magic links de un solo uso con expiración en minutos, comparaciones en tiempo constante, rate limiting en cada endpoint público, HTML de usuario sanitizado siempre.
-10. **La IA es un usuario más, no una feature aparte.** El agente interno y los agentes externos (Claude, ChatGPT vía MCP) operan con los mismos permisos, la misma API y el mismo audit log que un humano con ese rol.
+10. **El dashboard es solo para desktop.** Escribir, diseñar, segmentar y analizar es trabajo de escritorio. No hay app móvil ni UI responsive para el creador: por debajo de 1024 px el dashboard muestra *"Tirada se usa desde un ordenador"* y ofrece enviarte el enlace por email. Ahorra meses de trabajo de UI y QA. Todo lo que ve **el lector** (emails, websites, link-in-bio, formularios, checkout, comunidad, webinars) sigue siendo mobile-first, porque ahí es donde se lee.
+11. **La IA es un usuario más, no una feature aparte.** El agente interno y los agentes externos (Claude, ChatGPT vía MCP) operan con los mismos permisos, la misma API y el mismo audit log que un humano con ese rol.
 
 ## Decisiones de fondo (resumen)
 
