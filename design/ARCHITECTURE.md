@@ -119,7 +119,7 @@ flowchart TD
 - **Reader** (global, fuera del tenant): una persona = un email normalizado. Tiene credenciales (magic link, passkey) y sesión válida en *toda* la red. **No contiene datos del creador.**
 - **Subscription** (por publicación, dentro del tenant): estado, fuente de adquisición, custom fields, tags, tier. Es lo que el creador "posee" y exporta.
 
-Por qué la separación: login de un clic y recomendaciones de un clic necesitan identidad global; GDPR y exportación necesitan que los datos del creador sean del creador. Un `DELETE` de subscription no toca al reader; un borrado GDPR del reader cascada a todas sus subscriptions (§11).
+Por qué la separación: login de un clic y recomendaciones de un clic necesitan identidad global; GDPR y exportación necesitan que los datos del creador sean del creador. Un `DELETE` de subscription no toca al reader; un borrado GDPR del reader cascada a todas sus subscriptions (§12).
 
 Roles (detalle en [API_AND_AI.md](API_AND_AI.md)): `memberships(workspace_id, user_id, role)` y `publication_memberships(publication_id, user_id, role)` con `role ∈ {admin, member, contributor}`; el permiso efectivo es el máximo de ambos. Los agentes IA usan `principals` del tipo `agent` con el mismo rol.
 
@@ -127,7 +127,7 @@ Roles (detalle en [API_AND_AI.md](API_AND_AI.md)): `memberships(workspace_id, us
 
 ## 5. Modelo de datos (Postgres)
 
-Postgres 17, un clúster primario por región de datos (§10). Claves primarias **UUIDv7** (ordenables por tiempo, sin hotspot). `workspace_id` en cada tabla de tenant con RLS. Lo que sigue son las columnas principales, no el DDL completo.
+Postgres 17, un clúster primario por región de datos (§11). Claves primarias **UUIDv7** (ordenables por tiempo, sin hotspot). `workspace_id` en cada tabla de tenant con RLS. Lo que sigue son las columnas principales, no el DDL completo.
 
 ### 5.1 Identidad y tenancy
 
