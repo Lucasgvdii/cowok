@@ -19,6 +19,7 @@ Relacionados: [ARCHITECTURE.md](ARCHITECTURE.md) (servicios, Postgres, bus), [DE
 | Plantillas | **Marco referenciado (resuelto al renderizar) + esqueleto copiado** | Cambios de plantilla llegan a posts vivos sin pisar contenido. |
 | IA | **Claude**, y toda edición de IA entra como *sugerencia* revisable | La IA es un colaborador más (principio 10), no un botón que reescribe en silencio. |
 | QA visual | **Snapshot tests propios + Email on Acid API** en CI | Construimos el renderer, compramos la granja de clientes de correo. |
+| Dispositivo del creador | **Solo desktop** (ancho mínimo ~1024 px); la vista previa sí simula el móvil del lector | Un editor colaborativo con columnas, comentarios y preflight no cabe en un teléfono; el lector, en cambio, lee en móvil. |
 
 ---
 
@@ -239,6 +240,13 @@ Panel con coincidencias resaltadas (decorations), opciones mayúsculas/palabra c
 
 Tres orígenes, un mismo flujo: **ordenador** (drop/paste de archivos), **biblioteca de medios** (panel lateral arrastrable, con búsqueda y filtro de imágenes de IA) y **URL** (pegar URL de imagen → fetch en servidor con protección SSRF: solo http(s), resolución DNS a IPs públicas, límite de tamaño y tipo MIME real). Subida directa a R2 con URL prefirmada, placeholder con progreso en el documento, y el nodo apunta a un `assetId`, nunca a una URL externa.
 
+### 4.7 Solo desktop para el creador, vista previa móvil para el lector
+
+- **El editor y todo el dashboard son solo desktop**: ancho mínimo ~1024 px, sin layouts móviles ni tablet que mantener. Por debajo de ese ancho (o en un user agent móvil) se muestra una pantalla "Tirada se usa desde un ordenador" con un botón **"Enviarme el enlace"** (email al propio usuario con el deep link a lo que intentaba abrir: post, comentario, informe). Los emails de notificación (menciones, comentarios) también llevan ese deep link y se abren igual.
+- Consecuencia de diseño: el mapa de teclado (§4.3), los paneles laterales (comentarios, biblioteca, preflight) y el gauge (§9) asumen pantalla ancha y teclado físico; no hay que degradar nada.
+- **La vista previa sí es móvil-primero**: los emails se leen mayoritariamente en el teléfono. El panel de preview tiene conmutador **Escritorio / Móvil (375 px) / Móvil oscuro** para email y web, y el preview móvil es el que se muestra por defecto en el paso de envío. Renderiza el mismo HTML que se enviará (con las media queries de §6.1 activas en un iframe de 375 px), apilado de columnas incluido. El envío de prueba a tu propio teléfono sigue siendo la verificación final.
+- Las superficies del **lector** (web, emails, landing de polls, login) son, por supuesto, responsive; esta restricción solo aplica a la herramienta del creador ([PLATFORM.md](PLATFORM.md)).
+
 ---
 
 ## 5. Pipeline de imágenes
@@ -354,7 +362,7 @@ Sintaxis (subconjunto estricto de Liquid, sin bucles ni lógica):
 - **Sin fallback = advertencia en preflight**; campo inexistente = error. Escapado HTML siempre (un nombre `<script>` no rompe nada).
 - Se resuelven en el último paso del envío sobre la plantilla precompilada de la variante (§8): sustitución de strings, no re-render por suscriptor.
 
-**Suscriptor simulado** (`Cmd+Shift+P`): elige un suscriptor real (búsqueda) o una persona sintética ("premium, Madrid, cohorte B, sin nombre"). La vista previa muestra email o web exactamente como lo recibiría, con un panel "por qué": qué bloques se ocultaron y por qué condición, qué merge tags usaron fallback. Envío de prueba "como este suscriptor" a tu bandeja.
+**Suscriptor simulado** (`Cmd+Shift+P`, con conmutador escritorio/móvil, §4.7): elige un suscriptor real (búsqueda) o una persona sintética ("premium, Madrid, cohorte B, sin nombre"). La vista previa muestra email o web exactamente como lo recibiría, con un panel "por qué": qué bloques se ocultaron y por qué condición, qué merge tags usaron fallback. Envío de prueba "como este suscriptor" a tu bandeja.
 
 ---
 
@@ -523,6 +531,7 @@ flowchart LR
 | Medidor de tamaño vs. clipping de Gmail | §9 |
 | Versiones en audio | §6.4 |
 | Slash, markdown y atajos; pegado de Google Docs; buscar y reemplazar | §4 |
+| (Restricción de producto) editor solo desktop, preview móvil del lector | §4.7 |
 | IA: escritor, reescribir, traducir, gramática, imágenes, agente con atajo | §12 |
 | A/B de asunto en el envío | §13 |
 | QA de renderizado (Litmus/Email on Acid de la factura) | §10, [BUILD_VS_BUY.md](BUILD_VS_BUY.md) |

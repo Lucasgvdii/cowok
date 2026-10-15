@@ -194,6 +194,22 @@ Categorías que una plataforma real necesita y que no estaban en la factura.
 - **Coste:** ~8.000–15.000 $/mes.
 - **Salida:** pipelines en contenedores; el proveedor de CI es reemplazable.
 
+### E12. Compras pequeñas que nadie cuenta (pero sin ellas no se opera)
+
+Líneas de pocos miles de dólares que aparecen en cualquier operación real de envío:
+
+| Necesidad | Elección | Decisión | Coste estimado ($/mes) |
+|---|---|---|---|
+| Datos de reputación de proveedores | Google Postmaster Tools API, Microsoft SNDS/JMRP, Yahoo CFL | Gratis; la ingesta es Build | 0 |
+| Pruebas de colocación en bandeja (seed lists) | GlockApps o Validity Everest | Buy | ~2.000–5.000 |
+| Monitorización de blocklists | Consultas DNSBL propias + Spamhaus DQS | Build + Buy (feed) | incluido en 1 |
+| Geolocalización/ASN de IPs | MaxMind GeoIP2 (con IPinfo para escáneres) | Buy | incluido en 11 |
+| DNS de nuestros dominios | Cloudflare DNS | Buy | incluido en 2 |
+| BIMI / VMC para creadores grandes | Certificados VMC de DigiCert/Entrust | Buy, se repercute | por cliente |
+| Gestión de IPv4 y ASN | RIR (ARIN/RIPE) + broker de IPv4 | Buy (una vez) | ~1.000 recurrente |
+
+Todas tienen sustituto directo; ninguna justifica más análisis que esta tabla.
+
 ---
 
 ## Resumen
