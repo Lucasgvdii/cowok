@@ -347,10 +347,10 @@ Los webhooks son **un consumidor más del bus** ([ARCHITECTURE.md](ARCHITECTURE.
 | `tier.paused` · `tier.resumed` | Se pausan/reanudan nuevas altas en un tier |
 | `post.scheduled` · `post.updated` · `post.published` · `post.sent` | Ciclo de vida del post (`post.sent` al terminar el envío, con totales) |
 | `send.failed` · `send.blocked` | Envío detenido por preflight o kill-switch |
-| `survey.response_submitted` · `poll.response_submitted` | Respuesta (con `subscriber_id` y respuestas por pregunta) |
+| `survey.response.created` · `poll.response.created` | Respuesta (con `subscriber_id` y respuestas por pregunta) |
 | `referral.created` · `referral.milestone_reached` | Programa de referidos |
 | `podcast.episode.published` · `.updated` · `.archived` · `.deleted` | Episodios |
-| `podcast.private_feed.access_granted` · `.access_revoked` · `.accessed` | Feeds privados (alta, baja y uso de URL personal) |
+| `podcast.private_feed.access_granted` · `.access_revoked` · `.accessed` | Feeds privados (alta, baja y uso de URL personal); una rotación de token emite `access_revoked` + `access_granted` con `reason: "rotated"` |
 | `order.completed` · `order.refunded` | Productos y entradas |
 | `automation.enrollment.started` · `.completed` · `.exited` | Journeys |
 | `community.member.joined` · `community.post.reported` | Comunidad |

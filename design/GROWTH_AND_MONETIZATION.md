@@ -474,9 +474,9 @@ Cada tier lista perks; cada perk es un *proveedor de acceso* que se suscribe a c
 | Perk | Mecanismo |
 |---|---|
 | Contenido premium | entitlement en el JWT del edge |
-| Feed privado de podcast | URL con token por Reader (`/feed/{pub}/{token}.xml`), revocable; detección de compartición si el feed se descarga desde > 10 IPs distintas o > 3 países al día → rotación de token y aviso. Detalles en [PLATFORM.md](PLATFORM.md) |
+| Feed privado de podcast | URL con token por Reader (`/feed/{pub}/{token}.xml`), revocable; detección de compartición: > 3 /24 de IP distintas **y** > 2 user-agents de app distintos en 24 h → el token se marca; si el creador lo confirma, se rota y el lector recibe la URL nueva por email. Detalles en [PLATFORM.md](PLATFORM.md) |
 | Canales gated de comunidad | permiso de canal derivado del tier ([PLATFORM.md](PLATFORM.md)) |
-| Rol de Discord | el lector vincula Discord por OAuth; el bot de Tirada asigna o quita roles en tiempo real según el entitlement, más una reconciliación cada hora (Discord pierde eventos) |
+| Rol de Discord | el lector vincula Discord por OAuth; el bot de Tirada asigna o quita roles en tiempo real reaccionando a los eventos de entitlement, más un reconciliador diario (Discord pierde eventos) |
 | Productos incluidos | productos con `included_in_tiers[]` aparecen gratis en la tienda para esos tiers |
 | Webinars incluidos | entradas a coste 0 para tiers configurados |
 
@@ -506,11 +506,16 @@ Cada tier lista perks; cada perk es un *proveedor de acceso* que se suscribe a c
 
 **Lead magnets**: un producto con precio 0 exige email. El "pago" es la suscripción, con `acquisition.channel=lead_magnet`, y el texto lo dice claramente junto al botón.
 
-**Vendido dentro de emails y automatizaciones**: el bloque de producto del editor renderiza una tarjeta con precio en la moneda del lector y un enlace de checkout precargado; en automatizaciones, el paso "ofrecer producto" y el trigger "compró X" / "no compró en N días".
+**Vendido dentro de emails y automatizaciones**: el bloque `product` del editor ([EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques)) renderiza en el email una tarjeta con imagen, precio en la moneda del lector y botón bulletproof al checkout alojado (precargado con el email del lector), y en la web un checkout inline en vivo; en automatizaciones, el paso "ofrecer producto" y el trigger "compró X" / "no compró en N días".
 
 ### 11.3 Coaching y citas
 
-`Availability` (franjas semanales, zona horaria, buffer, antelación mínima, máximo por día), sincronización bidireccional con Google Calendar y Outlook (free/busy), y una sala de LiveKit generada para cada cita (o enlace propio de Zoom/Meet si el creador lo prefiere). Recordatorios a las 24 h y 1 h. Cancelación y cambio de hora según la política del producto (p. ej. gratis con > 24 h).
+**v1: integración con Cal.com, no agenda propia** (ver [ROADMAP.md](ROADMAP.md#lo-que-no-haríamos), punto 8). El reparto:
+
+- **Cal.com** pone la UI de reserva (embebida en la página del producto), la disponibilidad (franjas, buffer, antelación mínima, máximo por día) y la sincronización con Google Calendar y Outlook. El creador conecta su cuenta de Cal.com por OAuth.
+- **Tirada** es dueña del producto `coaching` (precio, variantes, paquetes de N sesiones), del **cobro** (Stripe Connect en la cuenta del creador, 0 %), del vínculo **comprador → suscriptor** (Reader y consentimiento según §11.2) y de los **recordatorios** (24 h y 1 h, por el stream transaccional, con los emails de Cal.com desactivados). La sala es de LiveKit, generada por cita, o el enlace de Zoom/Meet del creador.
+- Flujo: compra → entitlement de N sesiones → enlace de reserva de Cal.com firmado para ese comprador → los webhooks de Cal.com (`BOOKING_CREATED`, `BOOKING_RESCHEDULED`, `BOOKING_CANCELLED`) consumen o devuelven créditos. Cancelación y cambio de hora según la política del producto (p. ej. gratis con > 24 h).
+- **Agenda nativa** solo si el uso lo justifica (volumen de coaching y fricción medible con Cal.com); el modelo de entitlement no cambia si se sustituye la pieza de reserva.
 
 ### 11.4 Reseñas, pedidos e informes
 
@@ -557,7 +562,7 @@ flowchart LR
 - Toda sesión se graba (asset de Mux). Al terminar se crea automáticamente un **producto `replay` en borrador**, con el vídeo, el chat exportado y la transcripción, listo para publicar a un precio distinto o gratis para los asistentes.
 - **Webinars gratuitos para crecer la lista**: registrarse = suscribirse (`acquisition.channel=webinar`), con el texto visible. El registro funciona con magic link (§3), así que un lector de otra newsletter se apunta con un clic.
 - **Comprador → suscriptor**: todo comprador queda como Reader vinculado a la publicación; la suscripción a la newsletter sigue la regla de consentimiento de §11.2.
-- **Promoción**: bloque de webinar en el editor (cuenta atrás, plazas restantes), página propia en el sitio y banner opcional en el sitio durante las 72 h previas.
+- **Promoción**: bloque `event` del editor ([EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques)): en el email, fecha y hora en la zona del lector y plazas congeladas al enviar, con botón "Reservar"; en la web, cuenta atrás y plazas en vivo; ambos enlazan al checkout del webinar, página propia en el sitio y banner opcional en el sitio durante las 72 h previas.
 - **Informes por evento**: registros, compras, ingresos brutos y netos por tipo de entrada y moneda, asistencia en vivo (pico, media, minutos vistos), tasa de asistencia, nuevos suscriptores generados y ventas del replay.
 
 ---
@@ -573,6 +578,7 @@ flowchart LR
 | Ad network | **20 %** del gasto bruto del anunciante (el creador recibe el 80 %) |
 | Recomendaciones de pago | **20 %** del CPA |
 | Streaming de webinars | incluido hasta un cupo; por encima, coste de Mux/LiveKit repercutido **sin margen** |
+| Podcast: hosting, descargas y feeds privados ([PLATFORM.md §5](PLATFORM.md#5-podcast)) | **incluido en todos los planes**, también el gratuito: episodios ilimitados, sin topes de descargas (el audio se sirve desde R2, cuyo egress hacia la CDN es gratis, así que una descarga no nos cuesta por GB) y **0 %** sobre feeds privados y bundles. Solo una política de uso razonable de ancho de banda contra abusos evidentes (p. ej. usar el host como CDN de ficheros que no son episodios) |
 
 La comisión en ad network y recomendaciones no contradice el 0 %: ahí Tirada *aporta la demanda* (anunciantes, growers) y asume riesgo de cobro y fraude. En las ventas del creador no aporta nada más que el software, que ya se paga con la cuota.
 

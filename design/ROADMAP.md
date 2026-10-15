@@ -167,7 +167,7 @@ gantt
 - **Productos digitales** — archivos, links, guías, memberships, variantes, cupones, reviews moderadas, tags, storefront, lead magnets gratuitos, entrega automática vía Temporal, productos dentro de emails y automatizaciones.
 - **Podcast** — hosting, RSS con import preservando GUIDs y redirects, distribución Apple/Spotify/YouTube, transcripciones, analítica IAB con filtrado de bots y **proceso de certificación IAB Podcast Measurement v2.2**, feeds privados por tier, página por episodio, webhooks.
 - **Comunidad** — canales gratis/de pago, sync de posts, comentarios en hilo, DMs, pins, cola de moderación, ban/unban, roles mapeados, métricas, integraciones Discord (roles por tier) y Luma.
-- **Webinars** — LiveKit + Mux, hasta 10.000 asistentes, entradas en 10 monedas, 5 recordatorios, invitaciones de calendario, grabación y replay vendible. Coaching 1:1 vía integración con Cal.com.
+- **Webinars** — LiveKit + Mux, hasta 10.000 asistentes, entradas en 10 monedas, 5 recordatorios, invitaciones de calendario, grabación y replay vendible. Coaching 1:1: producto, cobro (Stripe Connect), vínculo comprador → suscriptor y recordatorios en Tirada; reserva y sincronización de calendario vía Cal.com ([GROWTH_AND_MONETIZATION.md §11.3](GROWTH_AND_MONETIZATION.md#113-coaching-y-citas)).
 - **Paywall avanzado** — metered paywall, suscripciones regalo, grupos con asientos y deals custom.
 - **AI website builder** — desde prompt o captura, sobre el mismo modelo de bloques del builder.
 
@@ -256,7 +256,7 @@ Con equipo en San Francisco/Nueva York, multiplicar por ~1,8. Ingresos esperados
 5. **No lanzar recomendaciones de pago ni ad network programática sin al menos 3 meses de datos de la red gratuita.** Sin datos de calidad de lista, el fraude se come la red en semanas.
 6. **No lanzar una ad network con 525 marcas a la vez.** Empezar por patrocinios directos (el creador vende su inventario con nuestras herramientas), luego un marketplace curado, luego programático.
 7. **No hacer "docenas de integraciones nativas".** API, webhooks, MCP, Zapier/Make. Nativas solo las que mueven dinero o identidad: Stripe, Discord, Luma, Linktree, HubSpot, Google Analytics, Meta (conversiones).
-8. **No construir agenda de coaching 1:1 propia.** Integración con Cal.com; vendemos la sesión, otros gestionan el calendario.
+8. **No construir agenda de coaching 1:1 propia en v1.** Cal.com pone la UI de reserva y la sincronización de calendario; Tirada pone el producto, el cobro (Stripe Connect), el vínculo comprador → suscriptor y los recordatorios. Agenda nativa solo si el uso lo justifica.
 9. **Dashboard del creador solo desktop: ni app móvil para creadores ni dashboard responsive.** En móvil, el dashboard muestra una sola pantalla: *"Tirada se usa desde un ordenador"*. Es un ahorro de alcance real: el editor colaborativo, el builder de automatizaciones, el website builder y los informes no se diseñan, prueban ni mantienen dos veces, lo que equivale a evitar ~1 squad de frontend (4–5 ingenieros) y un ciclo de QA por feature. Las superficies del **lector** (web, posts, paywall, formularios, login, link-in-bio, comunidad) sí son responsive y mobile-first; el email es la app del lector.
 10. **No competir con Discord en comunidad.** Canales, comentarios y DMs mínimos y bien moderados; para comunidades grandes, la integración con Discord es la respuesta correcta.
 11. **No AI website builder "desde captura" antes de que el builder normal sea bueno.** La IA genera bloques del mismo modelo; si el modelo es malo, la IA solo genera basura más rápido.

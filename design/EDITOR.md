@@ -52,7 +52,7 @@ Un post es un árbol ProseMirror serializado a JSON con dos añadidos que no exi
         "type": { "enum": ["paragraph","heading","bulletList","orderedList","taskList","blockquote",
                            "section","columns","column","table","image","gallery","button","divider",
                            "toc","footnotes","codeBlock","audio","video","file","embed","poll",
-                           "referral","recommendations","adSlot","htmlBlock","aiBlock","paywallBreak"] },
+                           "referral","recommendations","adSlot","product","event","htmlBlock","aiBlock","paywallBreak"] },
         "attrs":   { "type": "object" },
         "visibility": { "$ref": "#/$defs/visibility" },
         "content": { "type": "array" }
@@ -171,6 +171,8 @@ Cada bloque define cinco cosas: esquema, vista de edición (NodeView), y salida 
 | `referral` | hito siguiente, recompensa | merge tags de referido + barra de progreso imagen | widget | omitido |
 | `recommendations` | n publicaciones o auto | tarjetas con enlace de suscripción 1-clic | tarjetas | omitido |
 | `adSlot` / sponsor | formato, slot de plantilla | relleno por la ad network al programar | idem | "Patrocinado por X" leído |
+| `product` | `productId`, `variantId`, texto del CTA, mostrar imagen/descripción | tarjeta (tabla) con imagen, nombre y precio en la moneda del lector + botón **bulletproof** "Comprar" que enlaza al checkout alojado de Stripe, precargado con el email del lector; tarjeta entera clicable según §6.1 | isla con **checkout inline en vivo** (precio y disponibilidad actuales) | omitido / `Nombre — precio: URL` |
+| `event` | `webinarId` (o evento Luma), texto del CTA, mostrar plazas | fecha y hora **estáticas** en la zona horaria del lector si se conoce (si no, la de la publicación, con la zona explícita), plazas restantes congeladas en el momento del envío ("quedaban N plazas") y botón **bulletproof** "Reservar" al checkout del webinar; nunca GIF de cuenta atrás | isla con **cuenta atrás en vivo** y **plazas en tiempo real**; enlaza al checkout del webinar | omitido / `Título — fecha y hora: URL` |
 | `htmlBlock` | HTML del usuario | sanitizado, sin `<script>`/`<iframe>` | sanitizado | omitido |
 | `aiBlock` | prompt, fuente, hash | se congela como contenido normal | idem | idem |
 | `paywallBreak` | tier, texto CTA | corte + CTA de login/upgrade | corte servidor + CTA | corte |

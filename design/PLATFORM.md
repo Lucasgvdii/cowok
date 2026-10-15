@@ -362,7 +362,7 @@ Un admin puede asignar Moderator a un lector concreto sin darle acceso al worksp
 ### 4.4 Integraciones
 
 - **Luma**: el creador conecta su calendario Luma (API key); los eventos se muestran en un canal "Eventos" y como bloque en la web; un webhook de Luma `guest.registered` se mapea a un evento `community.event_registered` en nuestro bus (y a tag). Si usa webinars nativos ([GROWTH_AND_MONETIZATION.md](GROWTH_AND_MONETIZATION.md)), Luma es opcional.
-- **Discord**: bot propio de Tirada. El lector vincula su cuenta con OAuth2 de Discord desde su perfil; el bot asigna/retira roles de Discord según el tier (`tier → role_id` configurable) reaccionando a `subscription.upgraded|downgraded|canceled`, con un reconciliador diario. Sin sincronizar mensajes (Discord es el chat; nuestra comunidad es el foro).
+- **Discord**: bot propio de Tirada. El lector vincula su cuenta con OAuth2 de Discord desde su perfil; el bot asigna/retira roles de Discord según el tier (`tier → role_id` configurable) en tiempo real, reaccionando a `subscription.upgraded|downgraded|canceled`, con un reconciliador diario (Discord pierde eventos). Sin sincronizar mensajes (Discord es el chat; nuestra comunidad es el foro).
 
 ---
 
@@ -394,9 +394,9 @@ Medimos en el Worker que sirve el audio, no en el cliente:
 
 - Cada suscriptor de pago con acceso al podcast obtiene una URL de feed **única por suscriptor**: `https://feeds.tirada.fm/p/<show>/<token>.xml` con token opaco de 128 bits (no JWT: tiene que funcionar para siempre en apps que no reenvían cookies). Incluye `podcast:locked`.
 - El Worker valida token → suscriptor → tier vigente en cada request de feed y de audio (los enlaces de audio del feed privado llevan el mismo token). Si el pago cae, el feed devuelve un único episodio "tu suscripción ha expirado" en lugar de 404 (mejor UX y retiene).
-- Detección de compartición: un token usado desde > N IPs/ASN distintos en 24 h se marca; el creador puede rotarlo (el suscriptor recibe el nuevo enlace por email).
+- Detección de compartición: un token usado desde > 3 /24 de IP distintas **y** > 2 user-agents de app distintos en 24 h se marca (el acceso no se corta); si el creador lo confirma, el token se rota y el suscriptor recibe el nuevo enlace por email. Mismos umbrales en [GROWTH_AND_MONETIZATION.md §10.6](GROWTH_AND_MONETIZATION.md#106-perks-de-pago).
 - **Bundle**: el acceso al podcast es un "perk" de tier ([GROWTH_AND_MONETIZATION.md](GROWTH_AND_MONETIZATION.md)); no hay precio separado salvo que el creador lo cree como producto.
-- Webhooks: `podcast.episode.published|updated|archived|deleted` y `podcast.private_feed.accessed|revoked|rotated`.
+- Webhooks: `podcast.episode.published|updated|archived|deleted` y `podcast.private_feed.access_granted|access_revoked|accessed` (catálogo de [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos)); una rotación emite `access_revoked` del token viejo y `access_granted` del nuevo, con `reason: "rotated"`.
 
 ### 5.5 Migración desde otro host
 

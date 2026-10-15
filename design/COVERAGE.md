@@ -6,8 +6,7 @@
 
 - **Líneas del backlog:** 383 (370 features + 13 categorías de proveedores de la factura del founder).
 - **Duplicados en el backlog:** 17 líneas repiten (literalmente o en esencia) una anterior; se marcan con *(duplicado, ver arriba)* y apuntan a la original. **Items únicos: 366.**
-- **Huecos:** 3 líneas con cobertura solo parcial, marcadas con ⚠️ y recogidas en [Huecos detectados](#huecos-detectados). Ninguna línea queda sin documento.
-- **Inconsistencias entre documentos** encontradas al trazar: 6, en [Inconsistencias detectadas](#inconsistencias-detectadas).
+- **Huecos:** ninguno abierto. Las 3 líneas que tenían cobertura parcial y las 6 inconsistencias entre documentos encontradas al trazar están resueltas; ver [Huecos e inconsistencias resueltos](#huecos-e-inconsistencias-resueltos). Ninguna línea queda sin documento.
 
 **Por fase** (fase en la que la línea queda entregada; si arranca antes, la celda *Dónde* lo indica):
 
@@ -70,7 +69,7 @@
 - **Híbrido**: una pieza comprada más una capa propia que es la que diferencia (p. ej. Turnstile + scoring propio, Claude + semantic layer).
 - **Integración**: conector con un servicio de terceros que el creador ya usa (Discord, Luma, Linktree, Cal.com, GA4…).
 - **Operación**: no es software sino personas, procesos o efecto de red (equipo de entregabilidad, ventas de la ad network, soporte).
-- ⚠️: cobertura parcial; ver [Huecos detectados](#huecos-detectados).
+- ⚠️: cobertura parcial (hoy no queda ninguna; histórico en [Huecos e inconsistencias resueltos](#huecos-e-inconsistencias-resueltos)).
 - *(duplicado, ver arriba)*: la línea repite otra anterior del backlog; hereda su diseño (la fase puede diferir si el contexto llega más tarde).
 
 ---
@@ -203,7 +202,7 @@
 | multiple authors per post, with bylines | [API_AND_AI.md §5.4](API_AND_AI.md#54-autores) | 1 | Build |
 | guest authors for one-off contributors | [API_AND_AI.md §5.4](API_AND_AI.md#54-autores) | 1 | Build |
 | author profiles with bios, avatars, and social links | [API_AND_AI.md §5.4](API_AND_AI.md#54-autores) | 1 | Build |
-| community roles mapped to workspace roles (admin, manager, moderator) | [API_AND_AI.md §5.5](API_AND_AI.md#55-comunidad) · [PLATFORM.md §4.2](PLATFORM.md#42-roles-y-moderación) — ver inconsistencia I-2 | 3 | Build |
+| community roles mapped to workspace roles (admin, manager, moderator) | [API_AND_AI.md §5.5](API_AND_AI.md#55-comunidad) · [PLATFORM.md §4.2](PLATFORM.md#42-roles-y-moderación) — Owner/Admin → admin, Member → manager, Contributor → moderator | 3 | Build |
 | real-time collaboration and comment threads on every draft *(duplicado, ver arriba)* | [EDITOR.md §2](EDITOR.md#2-colaboración-en-tiempo-real) · [EDITOR.md §2.1](EDITOR.md#21-comentarios-anclados-a-rangos) — = «real-time collaborative editing, so the whole…» | 1 | Build |
 | removing access the moment someone leaves | [API_AND_AI.md §5.6](API_AND_AI.md#56-desprovisionamiento-instantáneo) | 1 | Build |
 | publication transfers between owners, with written consent | [API_AND_AI.md §5.7](API_AND_AI.md#57-transferencia-de-publicación-con-consentimiento-escrito) | 1 | Build |
@@ -259,10 +258,10 @@
 |---|---|:-:|---|
 | selling files, links, guides, templates, and ebooks | [GROWTH_AND_MONETIZATION.md §11.1](GROWTH_AND_MONETIZATION.md#111-tipos) — Stripe Checkout + entrega propia | 3 | Híbrido |
 | memberships and time-based products | [GROWTH_AND_MONETIZATION.md §11.1](GROWTH_AND_MONETIZATION.md#111-tipos) | 3 | Híbrido |
-| 1:1 coaching sessions and appointments | [GROWTH_AND_MONETIZATION.md §11.3](GROWTH_AND_MONETIZATION.md#113-coaching-y-citas) · [ROADMAP.md Lo que NO haríamos](ROADMAP.md#lo-que-no-haríamos) — ROADMAP: Cal.com; ver inconsistencia I-1 | 3 | Integración |
+| 1:1 coaching sessions and appointments | [GROWTH_AND_MONETIZATION.md §11.3](GROWTH_AND_MONETIZATION.md#113-coaching-y-citas) · [ROADMAP.md Lo que NO haríamos](ROADMAP.md#lo-que-no-haríamos) — reserva y calendario vía Cal.com; producto, cobro, vínculo con el suscriptor y recordatorios en Tirada | 3 | Integración |
 | 0% platform fees on every sale | [GROWTH_AND_MONETIZATION.md §13.1](GROWTH_AND_MONETIZATION.md#131-lo-que-cobramos-y-lo-que-no) · [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) — Stripe Connect con application_fee = 0 | 3 | Buy |
 | a storefront on your beehiiv website | [GROWTH_AND_MONETIZATION.md §11.4](GROWTH_AND_MONETIZATION.md#114-reseñas-pedidos-e-informes) | 3 | Build |
-| products sold inside emails and automations ⚠️ | [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) — parcial: falta el bloque `product` en el catálogo de EDITOR §3 | 3 | Build |
+| products sold inside emails and automations | [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) · [EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques) — bloque `product` | 3 | Build |
 | free products that double as lead magnets | [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) | 3 | Build |
 | product variants | [GROWTH_AND_MONETIZATION.md §11.1](GROWTH_AND_MONETIZATION.md#111-tipos) | 3 | Build |
 | discount codes and promotion codes | [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) · [GROWTH_AND_MONETIZATION.md §10.2](GROWTH_AND_MONETIZATION.md#102-modelo) — cupones y promotion codes de Stripe | 3 | Buy |
@@ -291,7 +290,7 @@
 | discount codes on tickets | [GROWTH_AND_MONETIZATION.md §12.2](GROWTH_AND_MONETIZATION.md#122-entradas-recordatorios-y-calendario) | 3 | Buy |
 | 1:1 coaching bookings *(duplicado, ver arriba)* | [GROWTH_AND_MONETIZATION.md §11.3](GROWTH_AND_MONETIZATION.md#113-coaching-y-citas) — = «1:1 coaching sessions and appointments» | 3 | Integración |
 | buyers linked to their subscriber profile | [GROWTH_AND_MONETIZATION.md §12.3](GROWTH_AND_MONETIZATION.md#123-grabación-replay-y-crecimiento) | 3 | Build |
-| promoting events in your newsletter and on your site ⚠️ | [GROWTH_AND_MONETIZATION.md §12.3](GROWTH_AND_MONETIZATION.md#123-grabación-replay-y-crecimiento) — parcial: falta el bloque de webinar/evento en el catálogo de EDITOR §3 | 3 | Build |
+| promoting events in your newsletter and on your site | [GROWTH_AND_MONETIZATION.md §12.3](GROWTH_AND_MONETIZATION.md#123-grabación-replay-y-crecimiento) · [EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques) — bloque `event` | 3 | Build |
 | orders and revenue reporting for every event | [GROWTH_AND_MONETIZATION.md §12.3](GROWTH_AND_MONETIZATION.md#123-grabación-replay-y-crecimiento) | 3 | Build |
 
 ## 10. Comunidad
@@ -319,7 +318,7 @@
 
 | Feature (original) | Dónde se diseña | Fase | Build/Buy/Integración |
 |---|---|:-:|---|
-| native podcast hosting with zero platform fees ⚠️ | [PLATFORM.md §5.1](PLATFORM.md#51-hosting-y-feed) · [GROWTH_AND_MONETIZATION.md §13.1](GROWTH_AND_MONETIZATION.md#131-lo-que-cobramos-y-lo-que-no) — parcial: el hosting está diseñado, pero ningún doc fija que el podcast no tenga coste/comisión aparte | 3 | Build |
+| native podcast hosting with zero platform fees | [PLATFORM.md §5.1](PLATFORM.md#51-hosting-y-feed) · [GROWTH_AND_MONETIZATION.md §13.1](GROWTH_AND_MONETIZATION.md#131-lo-que-cobramos-y-lo-que-no) — incluido en todos los planes, 0 % en feeds privados, episodios ilimitados, sin topes de descargas | 3 | Build |
 | distribution to apple podcasts, spotify, and youtube | [PLATFORM.md §5.1](PLATFORM.md#51-hosting-y-feed) | 3 | Integración |
 | an automatic webpage for every episode *(duplicado, ver arriba)* | [PLATFORM.md §5.2](PLATFORM.md#52-página-por-episodio-y-librería) — = «an automatic page for every podcast…» | 3 | Build |
 | automatic transcripts | [PLATFORM.md §5.2](PLATFORM.md#52-página-por-episodio-y-librería) · [BUILD_VS_BUY.md §E3](BUILD_VS_BUY.md#e3-speech-to-text-y-tts--híbrido) — STT comprado | 3 | Híbrido |
@@ -365,9 +364,9 @@
 | tier created, deleted, paused, and resumed events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) | 1 | Build |
 | newsletter list subscribe and unsubscribe events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) | 1 | Build |
 | post sent, scheduled, and updated events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) | 1 | Build |
-| survey response events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) — ver inconsistencia I-3 | 2 | Build |
+| survey response events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) · [PLATFORM.md §6.3](PLATFORM.md#63-resultados-y-datos) — `survey.response.created` | 2 | Build |
 | podcast episode published, updated, archived, and deleted events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) | 3 | Build |
-| private podcast feed access events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) · [PLATFORM.md §5.4](PLATFORM.md#54-feeds-privados-y-paid-bundle) — ver inconsistencia I-4 | 3 | Build |
+| private podcast feed access events | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) · [PLATFORM.md §5.4](PLATFORM.md#54-feeds-privados-y-paid-bundle) — `podcast.private_feed.access_granted\|access_revoked\|accessed` | 3 | Build |
 | choosing exactly which events each endpoint receives | [API_AND_AI.md §2.2](API_AND_AI.md#22-endpoints-selección-de-eventos-y-payload) | 1 | Build |
 | a signing secret on every endpoint | [API_AND_AI.md §2.3](API_AND_AI.md#23-firma-y-rotación-de-secretos) | 1 | Build |
 | automatic retries on failed deliveries | [API_AND_AI.md §2.4](API_AND_AI.md#24-reintentos-log-y-operación) | 1 | Build |
@@ -586,25 +585,19 @@
 
 ---
 
-## Huecos detectados
+## Huecos e inconsistencias resueltos
 
-Ninguna línea del backlog se queda sin documento, pero estas tres solo están cubiertas a medias: el dominio las menciona y el documento que debería fijar el contrato no lo hace.
+**Huecos** (líneas que tenían cobertura parcial):
 
-| # | Línea del backlog | Qué falta | Diseño propuesto (una línea) |
-|---|---|---|---|
-| H-1 | products sold inside emails and automations | [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) habla de «el bloque de producto del editor», pero el catálogo de bloques de [EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques) (que es el contrato de render email/web/audio) no tiene bloque `product`. | Añadir `product` al catálogo de EDITOR §3: atributos `productId`, `variantId`, CTA; email = tarjeta imagen + precio en la moneda del lector + botón bulletproof a checkout precargado (sin `<a>` envolviendo la tabla); web = isla con checkout; audio = «Producto: X» o omitido. |
-| H-2 | promoting events in your newsletter and on your site | [GROWTH_AND_MONETIZATION.md §12.3](GROWTH_AND_MONETIZATION.md#123-grabación-replay-y-crecimiento) cita un «bloque de webinar en el editor (cuenta atrás, plazas restantes)» que no existe en [EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques). | Añadir bloque `event` a EDITOR §3: `webinarId`/evento Luma; email = fecha y hora en la zona del suscriptor + plazas como texto congelado al enviar + botón de registro con magic link (sin GIF de cuenta atrás); web = isla con cuenta atrás viva y plazas en tiempo real. |
-| H-3 | native podcast hosting with zero platform fees | [PLATFORM.md §5.1](PLATFORM.md#51-hosting-y-feed) diseña el hosting, pero el modelo de negocio de [GROWTH_AND_MONETIZATION.md §13.1](GROWTH_AND_MONETIZATION.md#131-lo-que-cobramos-y-lo-que-no) no dice si el podcast tiene coste aparte, límites de descargas o comisión sobre feeds privados. | Añadir fila en GROWTH §13.1: «Podcast: hosting y descargas incluidos en todos los planes (egress cero en R2), 0 % sobre feeds privados y bundles; fair use por encima de ~10 TB/mes de audio servido». |
+- **H-1 · products sold inside emails and automations**: bloque `product` añadido al catálogo de [EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques) (email: tarjeta con imagen, precio y botón bulletproof al checkout alojado; web: checkout inline en vivo; audio: omitido; texto: nombre + precio + enlace). [GROWTH_AND_MONETIZATION.md §11.2](GROWTH_AND_MONETIZATION.md#112-compra-y-entrega-automática) lo referencia.
+- **H-2 · promoting events in your newsletter and on your site**: bloque `event` añadido a [EDITOR.md §3](EDITOR.md#3-catálogo-de-bloques) (email: fecha y hora estáticas en la zona del lector, plazas congeladas al enviar, botón "Reservar"; web: cuenta atrás y plazas en vivo; enlaza al checkout del webinar). [GROWTH_AND_MONETIZATION.md §12.3](GROWTH_AND_MONETIZATION.md#123-grabación-replay-y-crecimiento) lo referencia.
+- **H-3 · native podcast hosting with zero platform fees**: fila de podcast en [GROWTH_AND_MONETIZATION.md §13.1](GROWTH_AND_MONETIZATION.md#131-lo-que-cobramos-y-lo-que-no): incluido en todos los planes, 0 % en feeds privados, episodios ilimitados, uso razonable de ancho de banda (egress de R2 gratis, sin topes de descargas).
 
-## Inconsistencias detectadas
+**Inconsistencias** entre documentos:
 
-No son huecos (la línea está diseñada), pero dos documentos dicen cosas distintas y hay que elegir una antes de construir.
-
-| # | Tema | Documentos en conflicto | Propuesta |
-|---|---|---|---|
-| I-1 | Coaching 1:1 | [GROWTH_AND_MONETIZATION.md §11.3](GROWTH_AND_MONETIZATION.md#113-coaching-y-citas) diseña agenda propia (disponibilidad, sync con Google/Outlook, sala LiveKit); [ROADMAP.md Lo que NO haríamos](ROADMAP.md#lo-que-no-haríamos) (punto 8) y la Fase 3 dicen «integración con Cal.com, no agenda propia». | Seguir al ROADMAP: Cal.com embebido para la agenda; GROWTH §11.3 se queda con producto, cobro y sala. |
-| I-2 | Rol de comunidad del contributor | [API_AND_AI.md §5.5](API_AND_AI.md#55-comunidad): Contributor → ninguno (moderator solo a mano). [PLATFORM.md §4.2](PLATFORM.md#42-roles-y-moderación): Contributor → Moderator. | Quedarse con API §5.5 (menos privilegio por defecto) y corregir la tabla de PLATFORM §4.2. |
-| I-3 | Nombre del evento de encuesta | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos): `survey.response_submitted`. [PLATFORM.md §6.3](PLATFORM.md#63-resultados-y-datos): `survey.response.created`. | Usar `survey.response_submitted` (el catálogo de webhooks es la fuente de verdad). |
-| I-4 | Eventos y umbrales de feeds privados | [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos): `access_granted`/`access_revoked`/`accessed`. [PLATFORM.md §5.4](PLATFORM.md#54-feeds-privados-y-paid-bundle): `accessed`/`revoked`/`rotated`. Umbral de compartición: «> N IPs/ASN» ([PLATFORM.md §5.4](PLATFORM.md#54-feeds-privados-y-paid-bundle)) frente a «> 10 IPs o > 3 países al día» ([GROWTH_AND_MONETIZATION.md §10.6](GROWTH_AND_MONETIZATION.md#106-perks-de-pago)). | Unificar en `granted`/`revoked`/`rotated`/`accessed` y un único umbral configurable (por defecto el de GROWTH §10.6). |
-| I-5 | Reconciliación de roles de Discord | [PLATFORM.md §4.4](PLATFORM.md#44-integraciones): diaria. [GROWTH_AND_MONETIZATION.md §10.6](GROWTH_AND_MONETIZATION.md#106-perks-de-pago): cada hora. | Cada hora (Discord pierde eventos y el perk es de pago). |
-| I-6 | Reintentos del paso webhook en automatizaciones | [API_AND_AI.md §2.5](API_AND_AI.md#25-pasos-webhook-dentro-de-automatizaciones): «la misma maquinaria» que los webhooks (3 días). [PLATFORM.md §2.5](PLATFORM.md#25-webhook-steps): máximo 24 h. | 24 h dentro de un journey (no bloquear un flujo 3 días) y documentarlo en API §2.5 como excepción. |
+- **I-1 · Coaching 1:1**: v1 integra Cal.com (UI de reserva y sync de calendario); Tirada es dueña del producto, el cobro (Stripe Connect), el vínculo comprador → suscriptor y los recordatorios; agenda nativa solo si el uso lo justifica. Alineados [GROWTH_AND_MONETIZATION.md §11.3](GROWTH_AND_MONETIZATION.md#113-coaching-y-citas), [ROADMAP.md Fase 3](ROADMAP.md#fase-3-meses-1524--monetización-amplia) y [ROADMAP.md Lo que NO haríamos](ROADMAP.md#lo-que-no-haríamos) (punto 8).
+- **I-2 · Rol de comunidad del Contributor**: canónico Contributor → moderator (Owner/Admin → admin, Member → manager); [API_AND_AI.md §5.5](API_AND_AI.md#55-comunidad) y [PLATFORM.md §4.2](PLATFORM.md#42-roles-y-moderación) ya coincidían.
+- **I-3 · Evento de encuesta**: `survey.response.created` (y `poll.response.created`), que sigue la convención `recurso.subrecurso.acción` del catálogo (`podcast.episode.published`, `community.member.joined`). Alineados [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos) y [PLATFORM.md §6.3](PLATFORM.md#63-resultados-y-datos).
+- **I-4 · Feeds privados**: eventos canónicos del catálogo de [API_AND_AI.md §2.1](API_AND_AI.md#21-catálogo-de-eventos): `podcast.private_feed.access_granted|access_revoked|accessed` (una rotación emite `access_revoked` + `access_granted` con `reason: "rotated"`). Umbral único de compartición: > 3 /24 de IP distintas y > 2 user-agents de app distintos en 24 h → se marca; rotación del token al confirmar. Alineados [PLATFORM.md §5.4](PLATFORM.md#54-feeds-privados-y-paid-bundle) y [GROWTH_AND_MONETIZATION.md §10.6](GROWTH_AND_MONETIZATION.md#106-perks-de-pago).
+- **I-5 · Roles de Discord**: sincronización en tiempo real por eventos + reconciliador diario en [PLATFORM.md §4.4](PLATFORM.md#44-integraciones) y [GROWTH_AND_MONETIZATION.md §10.6](GROWTH_AND_MONETIZATION.md#106-perks-de-pago).
+- **I-6 · Reintentos del paso webhook en automatizaciones**: máximo 24 h y, al agotarse, `continue` o `exit`; [PLATFORM.md §2.5](PLATFORM.md#25-webhook-steps) y [API_AND_AI.md §2.5](API_AND_AI.md#25-pasos-webhook-dentro-de-automatizaciones) ya coincidían.
