@@ -6,7 +6,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
   const ic = (n, c = '') => `<svg class="i ${c}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
-  const nf = new Intl.NumberFormat('es-ES');
+  const nf = new Intl.NumberFormat('es-ES', { useGrouping: 'always' });
   const fmt = (n) => nf.format(n);
   const pct = (n, d = 1) => n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }) + ' %';
   const eur = (n) => n.toLocaleString('es-ES', { maximumFractionDigits: 0 }) + ' €';
@@ -175,7 +175,7 @@
       const v = Math.round(base * (1 + i * 0.006));
       days.push({ d, v, raw: Math.round(v * (1.28 + r() * 0.22) + (sendDay ? 260 : 60)) });
     }
-    const W = 760, H = 250, P = { l: 44, r: 12, t: 12, b: 28 };
+    const W = 760, H = 300, P = { l: 44, r: 12, t: 12, b: 28 };
     const maxY = 2500;
     const x = (i) => P.l + (i * (W - P.l - P.r)) / (days.length - 1);
     const y = (v) => P.t + (H - P.t - P.b) * (1 - v / maxY);
@@ -280,7 +280,7 @@
             <div class="byline">${av('LM', '#7c3aed', 1)} Lucía Marín y Diego Salas · 6 min de lectura</div>
 
             <div class="blk"><span class="handle">${ic('plus')}${ic('grip')}</span>
-              <p>Hola <span class="mt" data-mt>{{ nombre | "lector" }}</span>, esta semana toca hablar de algo incómodo: <span class="remote-sel">la mitad de las aperturas que celebrabas eran de robots</span><span class="cursor-tag" style="background:#2563eb;margin-top:-18px">Diego</span>. Apple Mail Privacy Protection abre todos los correos por ti, y los escáneres corporativos hacen clic en cada enlace.</p>
+              <p>Hola <span class="mt" data-mt>{{ nombre | "lector" }}</span>, esta semana toca hablar de algo incómodo: <span class="remote-sel">la mitad de las aperturas que celebrabas eran de robots</span><span class="rcaret"><span class="cursor-tag" style="background:#2563eb">Diego</span></span>. Apple Mail Privacy Protection abre todos los correos por ti, y los escáneres corporativos hacen clic en cada enlace.</p>
             </div>
 
             <div class="blk" style="position:relative" id="slash-blk"><span class="handle">${ic('plus')}${ic('grip')}</span>
@@ -668,8 +668,8 @@
   views.automatizaciones = {
     title: 'Automatizaciones',
     html() {
-      const n = (cls, x, y, color, icon, type, title, body, stats, extra = '') =>
-        `<div class="node ${cls}" style="left:${x}px;top:${y}px" data-node>${extra}<div class="nt"><span class="ni" style="background:${color}">${ic(icon)}</span>${type}</div><div class="nh">${title}</div><div class="muted" style="margin-top:2px">${body}</div>${stats ? `<div class="stats">${stats}</div>` : ''}</div>`;
+      const n = (cls, color, icon, type, title, body, stats, extra = '') =>
+        `<div class="node ${cls}" data-node>${extra}<div class="nt"><span class="ni" style="background:${color}">${ic(icon)}</span>${type}</div><div class="nh">${title}</div><div class="muted" style="margin-top:2px">${body}</div>${stats ? `<div class="stats">${stats}</div>` : ''}</div>`;
       return `
       <div class="page-head">
         <div><h1>Bienvenida — nuevos suscriptores</h1><p class="sub">Activa desde el 3 mar · 2.318 personas en el flujo ahora</p></div>
@@ -682,15 +682,15 @@
         <div>
           <div class="mode-banner draft only-draft">${ic('edit')}<span><b>Editando borrador.</b> La versión live sigue ejecutándose sin cambios. Los cambios se marcan en el lienzo.</span></div>
           <div class="mode-banner live only-live">${ic('check')}<span><b>Versión live</b> · solo lectura. Las cifras son de los últimos 30 días.</span></div>
-          <div class="canvas"><div class="flow" id="flow" style="height:820px">
+          <div class="canvas"><div class="flow" id="flow">
             <svg class="edges" id="edges"></svg>
-            ${n('trigger', 255, 20, '#7c3aed', 'zap', 'Disparador', 'Se suscribe', 'Cualquier formulario o import · excluye fuente «API test»', '<span><b>1.284</b> entradas</span>')}
-            ${n('', 255, 150, 'var(--accent)', 'mail', 'Email', 'Bienvenida + 5 mejores posts', 'Asunto: «Bienvenido/a a La Brújula»', '<span>Apert. verif. <b>58 %</b></span><span>Clics <b>21 %</b></span>')}
-            ${n('changed', 255, 290, '#475569', 'clock', 'Espera', '<span class="only-live">Esperar 3 días</span><span class="only-draft"><del>3 días</del> <ins>2 días</ins></span>', 'Solo días laborables, 08:00 hora local', '', '<span class="diff badge warn only-draft">modificado</span>')}
-            ${n('', 255, 410, '#0369a1', 'branch', 'Condición', '¿Hizo clic en el email 1?', 'Usa el conjunto «Lector comprometido»', '')}
-            ${n('', 40, 540, 'var(--accent)', 'mail', 'Email · Sí', 'Guía: cómo leer la Brújula', 'Oferta Premium 14 días', '<span>Clics <b>17 %</b></span><span>Altas <b>4,2 %</b></span>')}
-            ${n('changed', 470, 540, 'var(--accent)', 'mail', 'Email · No', '¿Seguimos en contacto?', '<span class="only-live">Asunto: «¿Te ha llegado bien?»</span><span class="only-draft">Asunto: <del>«¿Te ha llegado bien?»</del> <ins>«¿Lo dejamos aquí?»</ins></span>', '<span>Clics <b>6 %</b></span><span>Bajas <b>1,1 %</b></span>', '<span class="diff badge warn only-draft">modificado</span>')}
-            ${n('added only-draft', 40, 690, '#334155', 'webhook', 'Webhook', 'POST → CRM (HubSpot)', 'Reintentos automáticos · firma HMAC', '', '<span class="diff badge good">nuevo</span>')}
+            <div class="frow">${n('trigger', '#7c3aed', 'zap', 'Disparador', 'Se suscribe', 'Cualquier formulario o import · excluye fuente «API test»', '<span><b>1.284</b> entradas</span>')}</div>
+            <div class="frow">${n('', 'var(--accent)', 'mail', 'Email', 'Bienvenida + 5 mejores posts', 'Asunto: «Bienvenido/a a La Brújula»', '<span>Apert. verif. <b>58 %</b></span><span>Clics <b>21 %</b></span>')}</div>
+            <div class="frow">${n('changed', '#475569', 'clock', 'Espera', '<span class="only-live">Esperar 3 días</span><span class="only-draft"><del>3 días</del> <ins>2 días</ins></span>', 'Solo días laborables, 08:00 hora local', '', '<span class="diff badge warn only-draft">modificado</span>')}</div>
+            <div class="frow">${n('', '#0369a1', 'branch', 'Condición', '¿Hizo clic en el email 1?', 'Usa el conjunto «Lector comprometido»', '')}</div>
+            <div class="frow">${n('', 'var(--accent)', 'mail', 'Email · Sí', 'Guía: cómo leer la Brújula', 'Oferta Premium 14 días', '<span>Clics <b>17 %</b></span><span>Altas <b>4,2 %</b></span>')}
+            ${n('changed', 'var(--accent)', 'mail', 'Email · No', '¿Seguimos en contacto?', '<span class="only-live">Asunto: «¿Te ha llegado bien?»</span><span class="only-draft">Asunto: <del>«¿Te ha llegado bien?»</del> <ins>«¿Lo dejamos aquí?»</ins></span>', '<span>Clics <b>6 %</b></span><span>Bajas <b>1,1 %</b></span>', '<span class="diff badge warn only-draft">modificado</span>')}</div>
+            <div class="frow only-draft">${n('added', '#334155', 'webhook', 'Webhook', 'POST → CRM (HubSpot)', 'Reintentos automáticos · firma HMAC', '', '<span class="diff badge good">nuevo</span>')}<div class="ghost-slot"></div></div>
           </div></div>
         </div>
         <aside class="stack">
@@ -735,7 +735,8 @@
   function drawEdges() {
     const flow = $('#flow'); if (!flow) return;
     const nodes = $$('[data-node]', flow);
-    const box = (el) => ({ x: el.offsetLeft, y: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight, vis: el.offsetParent !== null });
+    const fr = flow.getBoundingClientRect();
+    const box = (el) => { const r = el.getBoundingClientRect(); return { x: r.left - fr.left, y: r.top - fr.top, w: r.width, h: r.height, vis: r.width > 0 }; };
     const b = nodes.map(box);
     const path = (a, c, cls = '', label = '') => {
       if (!a.vis || !c.vis) return '';
@@ -902,11 +903,11 @@
         <section class="site-center">
           <div class="ed-toolbar" style="background:var(--surface-2)">
             <div class="seg" role="group" aria-label="Dispositivo de vista previa"><button data-dev="desktop" aria-pressed="${siteDevice === 'desktop'}">${ic('monitor')}Escritorio</button><button data-dev="mobile" aria-pressed="${siteDevice === 'mobile'}">${ic('phone')}Móvil</button></div>
-            <span class="muted" style="font-size:var(--fs-sm)">Vista del lector · el sitio es mobile-first</span>
+            
             <span class="spacer"></span>
-            <span class="badge warn">Borrador · 2 cambios sin publicar</span>
+            <span class="badge warn">Borrador · 2 cambios</span>
             <button class="btn sm">${ic('clock')}Historial</button>
-            <button class="btn sm ghost" data-palette="Rediseña el hero para destacar el plan Premium">${ic('sparkle')}IA</button>
+            <button class="btn sm ghost icon" aria-label="Editar con IA" title="Editar con IA" data-palette="Rediseña el hero para destacar el plan Premium">${ic('sparkle')}</button>
             <button class="btn sm primary" data-toast="Sitio publicado en labrujula.tech">Publicar</button>
           </div>
           <div class="site-stage">
@@ -1024,6 +1025,7 @@
     if (current && current.unmount) current.unmount();
     const el = $('#view');
     el.className = 'view' + (v.full ? ' full' : '');
+    $('#app').classList.toggle('compact', !!v.full);
     el.innerHTML = v.html();
     $$('#nav a').forEach((a) => (a.dataset.route === key ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
     document.title = `${v.title} · La Brújula Tech · Tirada`;
@@ -1146,6 +1148,7 @@
   });
 
   /* ---------------- arranque ---------------- */
+  $$('#nav a').forEach((a) => { a.title = a.childNodes[1] ? a.childNodes[1].textContent.trim() : a.textContent.trim(); });
   applyGate();
   route();
   window.addEventListener('resize', () => { if ($('#flow')) drawEdges(); });

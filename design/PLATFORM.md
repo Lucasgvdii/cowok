@@ -415,7 +415,7 @@ Medimos en el Worker que sirve el audio, no en el cliente:
 
 ### 6.2 Polls de un clic en el email
 
-Cada opción del poll es un enlace: `https://t.tirada.net/v/<post>/<poll>/<option>?s=<sig>` donde `sig = HMAC(key_publicación, subscriber_id|poll_id|option_id|send_id)`, truncado a 16 bytes base64url. El clic:
+Cada opción del poll es un enlace: `https://<dominio-de-tracking-de-la-publicación>/v/<post>/<poll>/<option>?s=<sig>` (el mismo dominio de tracking alineado de [DELIVERABILITY.md](DELIVERABILITY.md)) donde `sig = HMAC(key_publicación, subscriber_id|poll_id|option_id|send_id)`, truncado a 16 bytes base64url. El clic:
 
 1. Pasa por el filtro de bots de clics ([DELIVERABILITY.md](DELIVERABILITY.md)): los escáneres de seguridad que siguen todos los enlaces votarían todas las opciones. Si el patrón es de escáner (todas las opciones en < 2 s, UA/IP de gateway), no cuenta.
 2. Registra el voto (idempotente; votar otra opción cambia el voto hasta el cierre del poll).
