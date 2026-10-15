@@ -265,12 +265,12 @@
             <button class="btn sm ghost icon" aria-label="Cursiva">${ic('italic')}</button>
             <button class="btn sm ghost icon" aria-label="Enlace">${ic('link')}</button>
             <span class="sep"></span>
-            <button class="btn sm ghost" data-ai-write>${ic('sparkle')}Escribir con IA</button>
+            <button class="btn sm ghost" data-ai-write title="Escribir con IA (reescribir, traducir, corregir)">${ic('sparkle')}IA</button>
             <span class="saved">${ic('check')}Guardado</span>
             <span class="spacer"></span>
             <div class="avatars" title="Editando ahora">${av('LM', '#7c3aed', 1)}${av('DS', '#2563eb', 1)}${av('RP', '#0f766e', 1)}</div>
-            <button class="btn sm" data-tab-open="comentarios">${ic('comment')}2</button>
-            <a class="btn sm primary" href="#/enviar">Continuar a envío ${ic('chev-r')}</a>
+            <button class="btn sm" data-tab-open="comentarios">${ic('comment')}3</button>
+            <a class="btn sm primary" href="#/enviar">Enviar ${ic('chev-r')}</a>
           </div>
 
           <article class="doc" id="doc">
@@ -343,7 +343,7 @@
             <button class="tab" role="tab" data-tab="preview" aria-selected="true">Vista previa</button>
             <button class="tab" role="tab" data-tab="bloque" aria-selected="false">Visibilidad</button>
             <button class="tab" role="tab" data-tab="preflight" aria-selected="false">Preflight <span class="badge warn">1</span></button>
-            <button class="tab" role="tab" data-tab="comentarios" aria-selected="false">Comentarios</button>
+            <button class="tab" role="tab" data-tab="comentarios" aria-selected="false" aria-label="Comentarios" title="Comentarios">${ic('comment')} 3</button>
           </div>
           <div class="rp-body" id="rp"></div>
         </aside>
