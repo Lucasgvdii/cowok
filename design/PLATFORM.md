@@ -15,7 +15,7 @@ Referencias cruzadas que no se repiten aquí:
 
 ## Restricción de dispositivo: el dashboard es solo desktop
 
-Decisión de producto: **el dashboard del creador es solo desktop**. Website builder, automation builder, editor de segmentos, analítica, moderación de comunidad, gestión de podcast y encuestas se diseñan para pantallas ≥ 1024 px, con ratón y teclado. En móvil (viewport < 1024 px o UA móvil), cualquier ruta de `app.tirada.net` muestra una pantalla única: **"Tirada se usa desde un ordenador"**, con un botón *"Envíame el enlace"* que manda por email (stream transaccional) un magic link a la ruta exacta que se intentaba abrir, para continuar en el escritorio.
+Decisión de producto: **el dashboard del creador es solo desktop**. Website builder, automation builder, editor de segmentos, analítica, moderación de comunidad, gestión de podcast y encuestas se diseñan para pantallas ≥ 1024 px, con ratón y teclado. En móvil (viewport < 1024 px o UA móvil), cualquier ruta de `app.tirada.com` muestra una pantalla única: **"Tirada se usa desde un ordenador"**, con un botón *"Enviarme el enlace"* que manda por email (stream transaccional) un magic link a la ruta exacta que se intentaba abrir, para continuar en el escritorio.
 
 | Superficie | Dispositivo | Por qué |
 |---|---|---|
@@ -340,18 +340,18 @@ No competimos con Discord ni con Circle en tiempo real. Construimos un **foro as
 
 ### 4.2 Roles y moderación
 
-Los roles de comunidad se derivan de los del workspace (sin gestión doble):
+Los roles de comunidad se derivan de los del workspace (Owner, Admin, Member, Contributor; ver [API_AND_AI.md](API_AND_AI.md) §5) sin gestión doble:
 
 | Rol workspace | Rol comunidad | Puede |
 |---|---|---|
-| Admin | Admin | Todo, incluida configuración de canales y bans permanentes |
+| Owner / Admin | Admin | Todo, incluida configuración de canales y bans permanentes |
 | Member | Manager | Crear/ordenar canales, fijar, moderar, invitar |
 | Contributor | Moderator | Moderar cola, ocultar contenido, bans temporales |
 | — (lector) | Member | Postear, comentar, reportar |
 
 Un admin puede asignar Moderator a un lector concreto sin darle acceso al workspace.
 
-**Cola de moderación** (dashboard, solo desktop; los moderadores lectores sin acceso al workspace pueden ocultar y reportar desde la vista móvil de la comunidad, pero la cola completa y los bans se gestionan en desktop): entra lo reportado por miembros y lo marcado por un clasificador (Claude Haiku-class: spam, odio, datos personales) con score. Acciones: aprobar, ocultar, eliminar, ban (temporal con expiración o permanente), unban. Cada acción queda en audit log. Pre-moderación opcional para miembros nuevos (primeras N publicaciones).
+**Cola de moderación** (dashboard, solo desktop; los moderadores lectores sin acceso al workspace pueden ocultar y reportar desde la vista móvil de la comunidad, pero la cola completa y los bans se gestionan en desktop): entra lo reportado por miembros y lo marcado por un clasificador (Claude (modelo pequeño): spam, odio, datos personales) con score. Acciones: aprobar, ocultar, eliminar, ban (temporal con expiración o permanente), unban. Cada acción queda en audit log. Pre-moderación opcional para miembros nuevos (primeras N publicaciones).
 
 ### 4.3 Crecimiento y notificaciones
 
@@ -379,7 +379,7 @@ Un admin puede asignar Moderator a un lector concreto sin darle acceso al worksp
 
 Cada episodio publicado crea automáticamente una página `/podcast/<slug>` en el sitio: player (isla), notas del episodio (AST), capítulos, **transcripción** completa (SEO), schema `PodcastEpisode`, CTA de suscripción. La **librería** `/podcast` es un bloque `episode-list` paginado con filtro por temporada. El **player en posts** es un bloque del editor; en email se renderiza como imagen + enlace (según la política de "lo que el inbox no soporta" de [EDITOR.md](EDITOR.md)).
 
-**Transcripciones**: modelo STT de clase Whisper comprado como API (ver [BUILD_VS_BUY.md](BUILD_VS_BUY.md)), con diarización, salida en VTT/SRT/JSON. Después, Claude genera capítulos, show notes sugeridas y título SEO; todo editable antes de publicar.
+**Transcripciones**: STT comprado como API (Deepgram al principio; Whisper autoalojado cuando la factura lo justifique, ver [BUILD_VS_BUY.md](BUILD_VS_BUY.md), E3), con diarización, salida en VTT/SRT/JSON. Después, Claude genera capítulos, show notes sugeridas y título SEO; todo editable antes de publicar.
 
 ### 5.3 Analítica IAB 2.2
 
@@ -535,7 +535,7 @@ El founder tiene razón en que el soporte humano es parte del producto. El model
 - **Equipo**: soporte humano de primera línea en 3 husos horarios (Américas, Europa, APAC) desde el inicio de pago; ratio objetivo 1 agente por ~1.500 workspaces de pago, con especialistas: **entregabilidad** (escalado directo al equipo de [DELIVERABILITY.md](DELIVERABILITY.md)), **pagos/Stripe**, **migraciones** (white-glove para > 10k suscriptores: importamos lista, posts, redirects, feed de podcast y clientes de Stripe nosotros).
 - **IA delante, no en lugar de**: el agente de Tirada (mismo agente de [API_AND_AI.md](API_AND_AI.md), con permisos de solo lectura sobre el workspace del cliente *si el cliente lo autoriza*) responde preguntas de documentación y diagnóstico ("¿por qué este post fue a spam en Gmail?" → lee el panel de reputación). Cualquier conversación se escala a humano con un clic, y siempre que el cliente pague o haya dinero/entregabilidad en juego.
 - **Tooling**:
-  - Help desk comprado (Plain o Front; ver [BUILD_VS_BUY.md](BUILD_VS_BUY.md)) con un **panel lateral propio** que muestra el workspace: plan, estado de envíos, reputación por proveedor, últimos errores, webhooks fallidos, audit log reciente.
+  - Help desk comprado (Plain; ver [BUILD_VS_BUY.md](BUILD_VS_BUY.md), E8) con un **panel lateral propio** que muestra el workspace: plan, estado de envíos, reputación por proveedor, últimos errores, webhooks fallidos, audit log reciente.
   - **Impersonación con consentimiento**: el agente solicita acceso; el cliente lo aprueba (o lo pre-autoriza con caducidad); toda acción queda en el audit log del cliente con la etiqueta `support:<agente>`. Solo lectura por defecto; escritura requiere segunda aprobación.
   - Runbooks y macros versionados en el repo, y los incidentes de plataforma en una status page pública.
 - **SLAs**: primera respuesta < 4 h laborables en planes pagados, < 1 h en planes altos; incidentes de entregabilidad P1 con on-call 24/7.

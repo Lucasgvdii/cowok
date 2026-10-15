@@ -55,7 +55,7 @@ Por eso Tirada se diseña de abajo hacia arriba:
 | Datos transaccionales | **Postgres** (multi-tenant con `workspace_id` en cada tabla + RLS), particionado por publicación grande | Aburrido y correcto. |
 | Eventos / analítica | **ClickHouse** | Miles de millones de filas de opens/clicks/visitas/descargas con agregaciones en ms. |
 | Bus | **Redpanda** (API Kafka) con outbox desde Postgres | Reproducible, rebobinable, múltiples consumidores. |
-| Workflows durables | **Temporal** | Automatizaciones con esperas de semanas, reintentos de webhooks, recordatorios de webinars, entrega de productos. |
+| Workflows durables | **Temporal Cloud** | Automatizaciones con esperas de semanas, reintentos de webhooks, recordatorios de webinars, entrega de productos. |
 | Caché / rate limiting | **Valkey** | Token buckets, sesiones, contadores. |
 | Segmentos | **Roaring bitmaps** materializados por segmento | Pertenencia O(1), intersecciones/exclusiones instantáneas al enviar. |
 | Editor | **ProseMirror (Tiptap) + Yjs** con servidor Hocuspocus | El estándar de facto para colaboración en tiempo real. |

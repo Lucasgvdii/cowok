@@ -14,7 +14,7 @@ Contexto: tesis y decisiones de fondo en [README.md](README.md). Bus de eventos,
 | Autenticación | Doble firma DKIM 2048 (dominio del cliente + dominio de Tirada), SPF y DMARC alineados, BIMI opcional | Rotación DKIM cada 6 meses |
 | Quejas | Kill switch por publicación y proveedor | Aviso 0,1 % · pausa 0,3 % |
 | Bounces | Clasificador propio sobre el de KumoMTA, tabla cerrada código → acción | < 0,5 % de rebotes sin clasificar |
-| Reintentos | Backoff exponencial, `max_age` 48 h newsletters (24–72 h configurable), 30 min magic links | ~20 intentos en 48 h |
+| Reintentos | Backoff exponencial, `max_age` 48 h newsletters (24–72 h configurable), 15 min magic links (= TTL del token) | ~20 intentos en 48 h |
 | Supresión | 3 capas (global, publicación, transaccional) × temporal (TTL) / permanente | Lookup O(1) con roaring bitmaps |
 | Validación | Sintaxis, MX, desechables, typos, roles, historial de red. **Nunca SMTP probing** | < 0,3 % de hard bounces por envío |
 | Bots | Turnstile + honeypots + velocidad + ASN en altas; escáneres, MPP, honeypot links en clics | Métrica norte: clic humano verificado |
@@ -34,7 +34,7 @@ KumoMTA (Rust, política en Lua, open source) es el sucesor espiritual de Moment
 ```mermaid
 flowchart LR
   subgraph Producto
-    S[Send scheduler<br/>Temporal] --> F[Fan-out workers Go<br/>render por destinatario<br/>+ chequeo supresión]
+    S[Send scheduler<br/>Temporal] --> F[Fan-out workers Go<br/>plantilla por variante + variables<br/>+ chequeo supresión]
   end
   F -->|HTTP inject batch| K1[kumod nodo 1..N<br/>spool NVMe]
   K1 --> Q[Scheduled queues<br/>post:pub@dominio]
@@ -50,7 +50,7 @@ flowchart LR
   CTL --> K1
 ```
 
-- **Nodos**: servidores bare metal de 32 vCPU, 128 GB RAM, 2× NVMe en RAID1 para el spool (RocksDB). Supuesto de capacidad, a validar con benchmark propio antes de comprar: **2.500 msgs/s sostenidos por nodo** con DKIM 2048 doble y TLS. 3M/min = 50.000 msgs/s → 20 nodos + 50 % de margen = **30 nodos en 2 datacenters** (activo-activo, cada DC con el 60 % de capacidad).
+- **Nodos**: servidores bare metal de 32 vCPU, 128 GB RAM, 2× NVMe en RAID1 para el spool (RocksDB). Supuesto de capacidad conservador, a validar con benchmark propio antes de comprar: **~2.000 msgs/s sostenidos por nodo** con DKIM 2048 doble y TLS. 3M/min = 50.000 msgs/s; diseñamos para 75.000 msgs/s (1,5×) → **40 nodos + 8 de reserva en 2 datacenters** (activo-activo), igual que [ARCHITECTURE.md](ARCHITECTURE.md) §8.
 - **IPs**: un IP caliente entrega de forma sostenida ~300.000 msgs/h repartidos entre proveedores (≈ 5.000/min). Para 3M/min de pico hacen falta **~600 IPs calientes**. Por eso el plan es /24 al lanzar y un /22 propio con ASN propio en fase 2 ([ROADMAP.md](ROADMAP.md)). Nunca IPs de un cloud público: los rangos de AWS/GCP/Azure arrastran mala reputación de ASN.
 - **Pico**: el 60 % del volumen diario sale entre 05:00 y 08:00 ET (newsletters matinales). Las publicaciones que programan "a las 7:00" reciben un jitter de 0–5 min salvo que marquen el envío como sensible al tiempo.
 - **Pérdida de nodo**: cada inyección queda en el *send ledger* (ClickHouse). Si un nodo muere, a los 15 min reinyectamos los destinatarios sin evento final (`Delivery`/`Bounce`/`Expiration`) en otro nodo, deduplicando por `Message-ID` por destinatario. Preferimos un raro duplicado a una pérdida silenciosa.
@@ -408,7 +408,7 @@ Backoff exponencial empezando en 5 min, duplicando, con tope de 3 h entre intent
 
 | Tipo de mensaje | `max_age` | Por qué |
 |---|---|---|
-| Magic link / código de login | 30 min | El token caduca; reintentar más es inútil y confunde |
+| Magic link / código de login | 15 min | Igual al TTL del token (15 min); reintentar más es inútil y confunde |
 | Aviso de seguridad, recibo | 24 h | Útil al día siguiente, no a los 3 días |
 | Newsletter (por defecto) | 48 h | Cumple "24+ h antes de llamarlo bounce" sin entregar noticias rancias |
 | Newsletter marcada como sensible al tiempo (daily briefs) | 24 h | Configurable por el creador entre 24 y 72 h |
@@ -603,7 +603,7 @@ La **colocación estimada** viene de una red propia de ~300 buzones semilla (Gma
 
 > **Tasa de entrega** = mensajes con respuesta 250 / (mensajes intentados), excluyendo los suprimidos antes de enviar. Se publica por proveedor, mensualmente, con conteos absolutos.
 
-Presupuesto de pérdidas para llegar a ≥ 99,5 %:
+**Objetivo público (SLA): ≥ 99,3 % de entrega**, el mismo número del README y del backlog, y el que usan [ARCHITECTURE.md](ARCHITECTURE.md) §13 y el criterio de salida de la Fase 2 en [ROADMAP.md](ROADMAP.md). Internamente nos damos un presupuesto de pérdidas más exigente, **≥ 99,5 %**, para que los meses malos sigan por encima del SLA público:
 
 | Fuente de pérdida | Presupuesto | Palanca |
 |---|---|---|
@@ -611,7 +611,7 @@ Presupuesto de pérdidas para llegar a ≥ 99,5 %:
 | Bloqueos por reputación/contenido | ≤ 0,10 % | Pools, kill switch, preflight, blocklists |
 | Deferrals que expiran | ≤ 0,10 % | Shaping, backoff 48 h |
 | Buzón lleno / DNS | ≤ 0,05 % | Supresión temporal |
-| **Total** | **≤ 0,50 % → ≥ 99,5 %** | |
+| **Total** | **≤ 0,50 % → ≥ 99,5 % (interno; SLA público ≥ 99,3 %)** | |
 
 Prueba: página pública de estado con la tasa por proveedor de los últimos 30 días, metodología publicada, export de conteos agregados por cliente para que lo auditen, y auditoría anual de la cifra por un tercero. Un número sin denominador no es un claim.
 
@@ -631,7 +631,7 @@ Prueba: página pública de estado con la tasa por proveedor de los últimos 30 
 
 Imprescindible: experiencia previa en ESP (Mailchimp, SendGrid, Braze, Sparkpost) en al menos dos personas. Las relaciones personales con los equipos de Gmail, Microsoft y Yahoo se construyen en M3AAWG durante años y no se compran. Ver costes en [ROADMAP.md](ROADMAP.md).
 
-**On-call**: rotación semanal primaria + secundaria entre ingenieros y postmasters (mínimo 6 personas en rotación para que sea sostenible), PagerDuty. SLOs:
+**On-call**: rotación semanal primaria + secundaria entre ingenieros y postmasters (mínimo 6 personas en rotación para que sea sostenible), incident.io. SLOs:
 
 | Evento | Automático | Ack humano | Resolución objetivo |
 |---|---|---|---|

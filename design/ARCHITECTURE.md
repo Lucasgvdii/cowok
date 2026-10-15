@@ -121,7 +121,7 @@ flowchart TD
 
 Por qué la separación: login de un clic y recomendaciones de un clic necesitan identidad global; GDPR y exportación necesitan que los datos del creador sean del creador. Un `DELETE` de subscription no toca al reader; un borrado GDPR del reader cascada a todas sus subscriptions (§12).
 
-Roles (detalle en [API_AND_AI.md](API_AND_AI.md)): `memberships(workspace_id, user_id, role)` y `publication_memberships(publication_id, user_id, role)` con `role ∈ {admin, member, contributor}`; el permiso efectivo es el máximo de ambos. Los agentes IA usan `principals` del tipo `agent` con el mismo rol.
+Roles (detalle en [API_AND_AI.md](API_AND_AI.md)): `memberships(workspace_id, user_id, role)` y `publication_memberships(publication_id, user_id, role)` con `role ∈ {owner, admin, member, contributor}` (`owner` solo a nivel workspace, uno por workspace); el permiso efectivo es el máximo de ambos. Los agentes IA usan `principals` del tipo `agent` con el mismo rol.
 
 ---
 
@@ -245,7 +245,7 @@ flowchart LR
 
 ## 7. ClickHouse
 
-Clúster de 3 shards × 2 réplicas (ClickHouse Keeper), ingesta vía Kafka engine → Materialized View → tabla `ReplicatedReplacingMergeTree` para dedupe por `event_id`. Elegimos ingestar nosotros (Kafka engine) sobre ClickHouse Cloud ClickPipes para controlar el coste por fila; se reevalúa en [BUILD_VS_BUY.md](BUILD_VS_BUY.md).
+Clúster de 3 shards × 2 réplicas (ClickHouse Keeper; arrancamos en ClickHouse Cloud y pasamos a autoalojado en fase 3, según [BUILD_VS_BUY.md](BUILD_VS_BUY.md)), ingesta vía Kafka engine → Materialized View → tabla `ReplicatedReplacingMergeTree` para dedupe por `event_id`. Elegimos ingestar nosotros (Kafka engine) sobre ClickHouse Cloud ClickPipes para controlar el coste por fila; se reevalúa en [BUILD_VS_BUY.md](BUILD_VS_BUY.md).
 
 ```sql
 CREATE TABLE email_events ON CLUSTER tirada (
@@ -318,7 +318,7 @@ sequenceDiagram
   API->>SEG: audiencia = (lists ∪ segment) − excluidos − suprimidos
   SEG-->>R2: bitmap congelado (audience_snapshot_ref)
   API->>ORCH: sends.status = 'sending'
-  ORCH->>ORCH: render por variante × cohorte × tier (≤ 64 plantillas)
+  ORCH->>ORCH: render por variante × cohorte × tier (≤ 32 plantillas)
   ORCH->>R2: plantillas precompiladas
   loop por shard (lotes de 10k ordinales)
     ORCH->>ORCH: cargar datos de merge (COPY desde réplica)
@@ -331,7 +331,7 @@ sequenceDiagram
 
 1. **Congelar**: `revision_id` y bitmap de audiencia son inmutables desde ese momento. Un cambio en el post después no afecta al envío en curso; reintentar un lote produce *exactamente* el mismo email.
 2. **Audiencia**: operación de bitmaps (§9): `(L1 ∪ L2 ∪ S) ∧ ¬Excl ∧ ¬Supr_global ∧ ¬Supr_pub ∧ ¬Sunset`. 5M de suscriptores → ~3 ms.
-3. **Render por variante**: el AST se renderiza una vez por combinación `{variante de asunto} × {cohorte} × {free|premium} × {bloques condicionales por segmento}`. El contenido por segmento se resuelve como **sub-bitmaps**: cada combinación es una partición del bitmap de audiencia. Límite duro de 64 combinaciones por envío (si se supera, preflight lo marca).
+3. **Render por variante**: el AST se renderiza una vez por combinación `{variante de asunto} × {cohorte} × {free|premium} × {bloques condicionales por segmento}`. El contenido por segmento se resuelve como **sub-bitmaps**: cada combinación es una partición del bitmap de audiencia. Límite duro de 32 combinaciones por envío (si se supera, el preflight bloquea; ver [EDITOR.md](EDITOR.md) §8).
 4. **Personalizar**: el render produce una plantilla MiniJinja (el motor que KumoMTA usa) con merge tags y token de tracking por destinatario. La personalización ocurre **en KumoMTA**, no en el orquestador.
 5. **Inyectar** por la API HTTP de KumoMTA: una petición = una plantilla + 1.000 destinatarios con sus `substitutions` (nombre, campos, token de tracking firmado, URL de unsubscribe one-click).
 
@@ -343,8 +343,8 @@ sequenceDiagram
 |---|---|---|
 | Objetivo sostenido | 3M/min = **50k msg/s** | Requisito del backlog |
 | Diseño | **75k msg/s** (1,5×) | Margen para picos de las 6:00 y 7:00 locales |
-| Throughput por nodo KumoMTA | ~2.000 msg/s sostenidos (DKIM RSA-2048, TLS, spool NVMe) | Benchmarks públicos de KumoMTA ~7M/h por nodo; tomamos ~70 % |
-| Nodos necesarios | 75.000 / 2.000 ≈ **38 → 40 nodos** + 8 de reserva | 48 nodos en 2 regiones de envío |
+| Throughput por nodo KumoMTA | ~2.000 msg/s sostenidos (DKIM RSA-2048, TLS, spool NVMe); supuesto conservador a validar con benchmark propio | Benchmarks públicos de KumoMTA ~7M/h por nodo; tomamos ~70 % |
+| Nodos necesarios | 75.000 / 2.000 ≈ **38 → 40 nodos** + 8 de reserva | 48 nodos en 2 datacenters; ~600 IPs calientes (ver [DELIVERABILITY.md](DELIVERABILITY.md)) |
 | Inyección | 75 lotes/s de 1.000 | 1 orquestador maneja ~300 lotes/s; corremos 4 por redundancia |
 | Lectura de datos de merge | 75k filas/s | `COPY` por rango de `ordinal` desde réplica de lectura dedicada; ~15 MB/s |
 | Envío de 5M destinatarios | ~67 s de inyección | La entrega SMTP real la marca el *ritmo por proveedor*, no nosotros |
@@ -411,12 +411,12 @@ Elegimos **región de residencia por workspace (shard geográfico) sobre multi-m
 
 | Componente | HA dentro de región | Entre regiones | RPO | RTO |
 |---|---|---|---|---|
-| Postgres | Primario + 2 réplicas síncronas/asíncronas en 3 AZ (Patroni) | Réplica asíncrona *warm standby* en otra región | 0 en fallo de AZ; **≤ 1 min** en pérdida de región | 2 min (AZ); **≤ 1 h** (región, manual) |
+| Postgres | Primario + 2 réplicas síncronas/asíncronas en 3 AZ (Amazon RDS Multi-AZ en fases 1–2; Patroni si pasamos a autogestionado, ver [BUILD_VS_BUY.md](BUILD_VS_BUY.md)) | Réplica asíncrona *warm standby* en otra región | 0 en fallo de AZ; **≤ 1 min** en pérdida de región | 2 min (AZ); **≤ 1 h** (región, manual) |
 | Redpanda | 3 brokers en 3 AZ, RF=3 | MirrorMaker de `domain.events` | ≤ 1 min | 15 min |
 | ClickHouse | 2 réplicas por shard | Backup diario a R2 + replay de Redpanda | ≤ 24 h (recuperable de Redpanda hasta 7 días) | 4 h |
 | Valkey | Primario + réplica, Sentinel | No; se reconstruye (bitmaps desde R2 + recomputación) | N/A (caché) | 10 min |
-| Temporal | Clúster propio sobre Postgres dedicado | Namespace replication | ≤ 1 min | 30 min |
-| KumoMTA | N+8 nodos en 2 regiones de envío | Inyección redirigible | Spool local: pérdida de un nodo = mensajes en spool de ese nodo hasta que vuelve (disco persistente) | Inmediato para envíos nuevos |
+| Temporal | **Temporal Cloud** (gestionado, ver [BUILD_VS_BUY.md](BUILD_VS_BUY.md)) | Namespace con réplica multi-región (Temporal Cloud) | ≤ 1 min | 30 min |
+| KumoMTA | 40+8 nodos en 2 datacenters | Inyección redirigible | Spool local: pérdida de un nodo = mensajes en spool de ese nodo hasta que vuelve (disco persistente) | Inmediato para envíos nuevos |
 | Site edge | Cloudflare global | Snapshots en R2 | 0 | 0 (sirve caché aunque caiga el origen) |
 | tracker | 3 AZ × 2 regiones, Anycast vía Cloudflare | Activo-activo | Eventos en buffer local 10 min si Redpanda cae | 0 |
 
@@ -448,7 +448,7 @@ Principio clave para el lector: **el sitio y el tracker no dependen de Postgres 
 
 ## 13. Observabilidad y SLOs
 
-Stack: OpenTelemetry en todo (trazas, métricas, logs) → Grafana stack autogestionado (Mimir, Tempo, Loki) + Sentry para errores de frontend/backend; PagerDuty para guardia. La justificación de coste está en [BUILD_VS_BUY.md](BUILD_VS_BUY.md).
+Stack: OpenTelemetry en todo (trazas, métricas, logs) → **Grafana Cloud** (Mimir, Tempo, Loki gestionados) + **Sentry** para errores de frontend/backend; **incident.io** para guardia, paging y status page. Los logs de entrega del MTA van a ClickHouse, no a Grafana. La justificación de coste está en [BUILD_VS_BUY.md](BUILD_VS_BUY.md).
 
 | SLO | Objetivo | Medición |
 |---|---|---|
@@ -461,7 +461,7 @@ Stack: OpenTelemetry en todo (trazas, métricas, logs) → Grafana stack autoges
 | Frescura de analítica | p95 < 60 s evento → dashboard | Lag de consumidor ClickHouse |
 | Frescura de segmentos | p95 < 2 min | Debounce + lag del segment engine |
 | Webhooks | 99 % entregados en < 30 s (si el endpoint responde) | `webhook_deliveries` |
-| Entrega (delivered/aceptados) | ≥ 99,3 % | `mta.events`, ver [DELIVERABILITY.md](DELIVERABILITY.md) |
+| Entrega (aceptados 250 / intentados) | ≥ 99,3 % (SLA público; objetivo interno ≥ 99,5 %) | `mta.events`, ver [DELIVERABILITY.md](DELIVERABILITY.md) §14.2 |
 
 **Error budgets** gobiernan el ritmo de releases: si el redirector quema >50 % del presupuesto mensual, se congela su despliegue. Dashboards por publicación (para soporte) con la traza de un envío completo: `send_id` es atributo de traza en orquestador, KumoMTA (vía logs) y tracker.
 

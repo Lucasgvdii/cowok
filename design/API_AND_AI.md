@@ -422,7 +422,7 @@ Cada entrega es un workflow Temporal con política de reintento exponencial con 
 
 ### 2.5 Pasos webhook dentro de automatizaciones
 
-El paso "Webhook" del builder ([PLATFORM.md](PLATFORM.md)) usa la misma maquinaria de firma y reintentos, pero dentro del workflow Temporal del journey: el paso puede ser *fire-and-forget* o **bloqueante** (el journey espera la respuesta y puede ramificar con su JSON, por ejemplo `response.body.plan == "enterprise"`). Payload: el suscriptor serializado + `automation_id`, `enrollment_id`, `step_id`. Si se agotan los reintentos, el journey sigue por la rama `on_failure`.
+El paso "Webhook" del builder ([PLATFORM.md](PLATFORM.md)) usa la misma maquinaria de firma, pero dentro del workflow Temporal del journey y con su propia política de reintentos (backoff 30 s → 6 h, máximo 24 h; detalle en [PLATFORM.md](PLATFORM.md)): el paso puede ser *fire-and-forget* o **bloqueante** (el journey espera la respuesta y puede ramificar con su JSON, por ejemplo `response.body.plan == "enterprise"`). Payload: el suscriptor serializado + `automation_id`, `enrollment_id`, `step_id`. Si se agotan los reintentos, el journey hace `continue` o `exit` según lo configurado en el paso.
 
 ---
 
@@ -482,7 +482,7 @@ Patrón: posts con 1 CTA principal superan en +1,7 pp a los de 4+ enlaces.
 // 2ª llamada: send_post({ ..., confirmation_token: "cfm_01JA7…" })
 ```
 
-3. **Los envíos nunca salen sin confirmación explícita**. Para `send_post` y envíos de más de 1.000 destinatarios el token **no basta**: la confirmación se hace en `confirm_url` (dashboard, sesión humana con passkey o magic link) o por notificación push en la app. Un modelo con prompt injection puede llegar como mucho a *pedir* el envío.
+3. **Los envíos nunca salen sin confirmación explícita**. Para `send_post` y envíos de más de 1.000 destinatarios el token **no basta**: la confirmación se hace en `confirm_url` (dashboard en un ordenador, sesión humana con passkey o magic link). No hay app móvil del creador (principio 10 del [README](README.md)): en un móvil, `confirm_url` muestra *"Tirada se usa desde un ordenador"* y el botón para enviarse el enlace por email. Un modelo con prompt injection puede llegar como mucho a *pedir* el envío.
 4. **Contenido no confiable**: posts de comunidad, DMs, respuestas de encuestas y webhooks entrantes se devuelven envueltos en `<untrusted_content>` y las herramientas de escritura tienen límites por sesión (p. ej. máximo 20 `send_dm` por hora).
 5. **Audit log**: cada llamada registra `actor` (usuario), `via` (`mcp:claude.ai`, `mcp:chatgpt`, `agent`, `api_key:…`), tool, parámetros (con PII redactada), resultado y `request_id`. Visible en *Ajustes → Auditoría* y exportable.
 
@@ -498,24 +498,30 @@ Patrón: posts con 1 CTA principal superan en +1,7 pp a los de 4+ enlaces.
 
 ### 4.2 Cómo funciona
 
-Claude con tool use sobre **exactamente las mismas herramientas curadas del MCP** (§3.2), llamadas en nombre del usuario con su sesión y su rol. No hay una API privada para la IA. El modelo por defecto es el Claude de gama media para el agente y el más rápido para autocompletados y clasificación; el más capaz se reserva para tareas largas (redactar un post entero, auditar una automatización). Las confirmaciones destructivas se muestran como **tarjetas de acción** con botón: el agente propone, el humano pulsa.
+Claude con tool use sobre **exactamente las mismas herramientas curadas del MCP** (§3.2), llamadas en nombre del usuario con su sesión y su rol. No hay una API privada para la IA. Reparto de modelos (igual que en [BUILD_VS_BUY.md](BUILD_VS_BUY.md), E1): **Claude (modelo grande)** para el agente y las tareas largas (redactar un post entero, auditar una automatización); **Claude (modelo medio)** para el escritor; **Claude (modelo pequeño)** para autocompletados y clasificación. Las confirmaciones destructivas se muestran como **tarjetas de acción** con botón: el agente propone, el humano pulsa.
 
 ### 4.3 Lenguaje natural → segmento y → analítica
 
 El modelo **nunca** produce SQL ni toca ClickHouse. Produce JSON contra un esquema cerrado, que validamos y compilamos nosotros.
 
-**NL → DSL de segmentos** (DSL definido en [PLATFORM.md](PLATFORM.md)):
+**NL → DSL de segmentos** (DSL definido en [PLATFORM.md](PLATFORM.md) §3.2):
 
 > "Lectores de pago en España que no han abierto nada en 30 días pero clicaron en el post de hipotecas"
 
 ```json
-{ "all": [
-  { "field": "subscription.tier_type", "op": "eq", "value": "paid" },
-  { "field": "geo.country", "op": "eq", "value": "ES" },
-  { "event": "email.verified_open", "op": "count_eq", "value": 0, "within": "P30D" },
-  { "event": "email.human_click", "op": "count_gte", "value": 1, "where": { "post_id": "post_01J8HP" } }
-] }
+{
+  "name": "Pago en España, sin aperturas en 30 días, clicaron hipotecas",
+  "match": "all",
+  "conditions": [
+    { "field": "subscription.tier", "op": "in", "value": ["pro", "founders"] },
+    { "field": "location.country", "op": "eq", "value": "ES" },
+    { "event": "post.opened_verified", "op": "count_eq", "value": 0, "within": "P30D" },
+    { "event": "post.clicked_verified", "where": { "post_id": "post_01J8HP" }, "op": "count_gte", "value": 1 }
+  ]
+}
 ```
+
+Misma forma que el ejemplo canónico de [PLATFORM.md](PLATFORM.md) §3.2 (`match` + `conditions`, nodos `field`/`event`/`segment`/`condition_set`).
 
 El agente resuelve "el post de hipotecas" con `search_posts`, compila, muestra la traducción en lenguaje llano + **tamaño estimado** (sobre bitmaps) antes de guardar.
 
@@ -587,7 +593,7 @@ Un usuario puede estar en muchos workspaces. El rol de workspace aplica a todas 
 
 ### 5.5 Comunidad
 
-Mapeo por defecto, sobrescribible por canal: Owner/Admin → `community_admin`, Member → `community_manager`, Contributor → ninguno (puede recibir `moderator` a mano). Se pueden nombrar **moderadores entre los lectores** sin darles acceso al dashboard. Los roles de Discord se sincronizan con tiers, no con roles de equipo ([PLATFORM.md](PLATFORM.md)).
+Mapeo por defecto (canónico en [PLATFORM.md](PLATFORM.md) §4.2), sobrescribible por canal: Owner/Admin → `community_admin`, Member → `community_manager`, Contributor → `moderator`. Se pueden nombrar **moderadores entre los lectores** sin darles acceso al dashboard. Los roles de Discord se sincronizan con tiers, no con roles de equipo ([PLATFORM.md](PLATFORM.md)).
 
 ### 5.6 Desprovisionamiento instantáneo
 
@@ -615,7 +621,7 @@ Mover una publicación (suscriptores, contenido, Stripe, dominios) a otro worksp
 
 | Método | Detalle |
 |---|---|
-| **Magic link** | Un solo uso, 10 min, token de 256 bits guardado hasheado, comparación en tiempo constante, rate limit por email + IP. Abrir en el móvil un enlace pedido en el escritorio muestra un código de 6 dígitos/"aprobar" que **inicia sesión en el escritorio** que lo pidió (vínculo por `login_request_id`). |
+| **Magic link** | Un solo uso, 15 min, token de 256 bits guardado hasheado, nunca se consume con un `GET` (aterriza en una página que confirma con `POST`, por los escáneres de enlaces; ver [GROWTH_AND_MONETIZATION.md](GROWTH_AND_MONETIZATION.md) §4), comparación en tiempo constante, rate limit por email + IP. Abrir en el móvil un enlace pedido en el escritorio muestra un código de 6 dígitos/"aprobar" que **inicia sesión en el escritorio** que lo pidió (vínculo por `login_request_id`). |
 | **Passkeys (WebAuthn)** | Recomendado por defecto tras el primer login; obligatorio para owners al hacer acciones de §5.7 y confirmaciones de envío por MCP. |
 | **SSO** | SAML 2.0 y OIDC en Enterprise, con dominio verificado y opción "forzar SSO". |
 | **2FA** | TOTP como alternativa para quien no use passkeys; los admins pueden exigirlo a todo el workspace. |

@@ -26,12 +26,12 @@ Leyenda de decisiones: **Build** (código propio), **Buy** (SaaS gestionado), **
 
 ### 1. Email sending — **OSS + Build**
 
-- **Elección:** KumoMTA autoalojado (Rust + políticas en Lua) sobre **bare metal** en 2–3 colos, con IPs propias (objetivo: ASN propio y un /21). Encima, nuestra capa de control: colas por proveedor (Gmail, Yahoo, Microsoft, Apple), pools por reputación (probation / estándar / premium / transaccional), warming programado, retirada automática de IPs listadas. Detalle en [DELIVERABILITY.md](DELIVERABILITY.md).
+- **Elección:** KumoMTA autoalojado (Rust + políticas en Lua) sobre **bare metal** en 2 datacenters, con IPs propias (/24 al lanzar; /22 y ASN propio en fase 2). Encima, nuestra capa de control: colas por proveedor (Gmail, Yahoo, Microsoft, Apple), pools por reputación (probation / estándar / premium / transaccional), warming programado, retirada automática de IPs listadas. Detalle en [DELIVERABILITY.md](DELIVERABILITY.md).
 - **Por qué:** es *el* moat. SES, SendGrid y Postmark te venden throughput; lo que necesitamos es **control**: shaping por dominio receptor, backoff adaptativo según las respuestas 4xx de cada proveedor, aislamiento de una publicación tóxica en su propio pool en minutos. Ningún ESP te deja tocar eso. Además, el precio de lista no escala: SES a 0,10 $/1.000 son **~1M $/mes** a 10.000M emails, más ~35.000 $/mes de egress si estuviéramos en AWS.
-- **Coste a escala (estimado):** ~24–30 nodos MTA bare metal con 10 Gbps sin medir (~30.000 $/mes), compra de IPv4 (/21 ≈ 2.048 IPs a ~35 $ = ~70.000 $ una vez), feeds de reputación (Spamhaus DQS, ~2.000 $/mes) y, sobre todo, **un equipo de entregabilidad de 5–6 personas** (~100.000 $/mes cargado). Total **~150.000 $/mes frente a >1M $/mes** de un ESP.
+- **Coste a escala (estimado):** ~48 nodos MTA bare metal (40 + 8 de reserva, supuesto conservador de ~2.000 msg/s por nodo; ver [ARCHITECTURE.md](ARCHITECTURE.md) §8) con 10 Gbps sin medir (~50.000 $/mes), compra de IPv4 (/22 ≈ 1.024 IPs a ~35 $ = ~36.000 $ una vez; ~600 calientes en el pico), feeds de reputación (Spamhaus DQS, ~2.000 $/mes) y, sobre todo, **un equipo de entregabilidad de 5–6 personas** (~100.000 $/mes cargado). Total **~170.000 $/mes frente a >1M $/mes** de un ESP.
 - **Honestidad:** por debajo de ~500M emails/mes esto **no es más barato** que SES; es más caro, por el equipo. Lo hacemos desde el día uno igualmente porque la reputación de IPs tarda meses en construirse y no se puede comprar después.
 - **Revisar cuando:** nunca como decisión de fondo. Sí revisamos la ubicación (colo propio vs. proveedor bare metal tipo Hetzner/OVH/Latitude) cada año.
-- **Plan de salida:** KumoMTA es Apache 2.0; si el proyecto muriera, PowerMTA (comercial) habla los mismos conceptos (vMTAs, colas por dominio) y nuestra capa de control es nuestra. Para incidentes, **SES está configurado como overflow frío** para transaccional de plataforma (ver categoría extra 8), no para newsletters.
+- **Plan de salida:** KumoMTA es Apache 2.0; si el proyecto muriera, PowerMTA (comercial) habla los mismos conceptos (vMTAs, colas por dominio) y nuestra capa de control es nuestra. Para incidentes, **Postmark está contratado como respaldo caliente** para magic links y login de plataforma (ver categoría extra E7), nunca para newsletters.
 
 ### 2. Web hosting — **Buy (edge) + Buy (core)**
 
@@ -64,7 +64,7 @@ Leyenda de decisiones: **Build** (código propio), **Buy** (SaaS gestionado), **
 
 ### 5. Auth — **Build (con piezas OSS)**
 
-- **Elección:** auth propia: magic links de un solo uso (TTL de minutos, comparación en tiempo constante), passkeys (WebAuthn, librería SimpleWebAuthn), sesiones en Valkey, OAuth/OIDC propio para la API y el servidor MCP, y SAML para enterprise vía **Ory Polis** (antes BoxyHQ SAML Jackson) autoalojado.
+- **Elección:** auth propia: magic links de un solo uso (TTL de 15 minutos, consumidos solo por `POST` desde una página de confirmación, nunca por `GET`; comparación en tiempo constante), passkeys (WebAuthn, librería SimpleWebAuthn), sesiones en Valkey, OAuth/OIDC propio para la API y el servidor MCP, y SAML para enterprise vía **Ory Polis** (antes BoxyHQ SAML Jackson) autoalojado.
 - **Por qué:** hay dos poblaciones: ~500.000 usuarios de dashboard y **50M lectores**. Clerk a ~0,02 $/MAU con 10M lectores activos son ~200.000 $/mes; Auth0 bastante más. Y el login del lector es producto (login de un clic en cualquier publicación de la red, "abre en el escritorio el link que te llegó al móvil"), no un widget.
 - **Coste a escala:** 2 ingenieros dedicados (~40.000 $/mes) + infraestructura marginal; los magic links salen por nuestro propio MTA transaccional.
 - **Revisar cuando:** si el equipo de seguridad no puede sostener auditorías anuales de pentest del flujo, o si un cliente enterprise exige certificaciones que no tengamos (entonces Ory/WorkOS solo para SSO de dashboard).
@@ -143,10 +143,11 @@ Leyenda de decisiones: **Build** (código propio), **Buy** (SaaS gestionado), **
 Categorías que una plataforma real necesita y que no estaban en la factura.
 
 ### E1. LLMs — **Buy: Claude (Anthropic API)**
-- **Elección:** **Claude Opus 5.5** para el agente interno y las operaciones vía MCP (uso de herramientas, cambios con permisos); **Claude Sonnet 5.5** para el escritor (reescribir, traducir, corregir); **Claude Haiku 5.5** en batch para clasificación masiva (brand safety de campañas, moderación de comentarios, detección de publicaciones abusivas en probation).
-- **Por qué:** el agente es "un usuario más" (principio 10) y lo que importa es el uso fiable de herramientas sobre nuestra API. Prompt caching y Batch API (−50 %) hacen viable la clasificación a escala.
+- **Elección:** **Claude (modelo grande)** para el agente interno y las operaciones vía MCP (uso de herramientas, cambios con permisos); **Claude (modelo medio)** para el escritor (reescribir, traducir, corregir); **Claude (modelo pequeño)** en batch para clasificación masiva (brand safety de campañas, moderación de comentarios, detección de publicaciones abusivas en probation).
+- **Por qué:** el agente es "un usuario más" (principio 11 del [README](README.md)) y lo que importa es el uso fiable de herramientas sobre nuestra API. Prompt caching y Batch API (−50 %) hacen viable la clasificación a escala.
 - **Coste (estimado):** ~5M interacciones de agente/escritor al mes con contexto mayoritariamente cacheado + clasificación en batch → **~100.000–200.000 $/mes**, cubierto con créditos de IA incluidos por plan y excedentes cobrados.
 - **Salida:** capa interna `llm.complete()/llm.agent()` con evals propias por tarea; cambiar de modelo es medir en las evals, no reescribir.
+- **Embeddings — Buy, detrás de un adaptador:** un proveedor de embeddings vía API (p. ej. Voyage AI) para las sugerencias de partners de recomendación por IA ([GROWTH_AND_MONETIZATION.md](GROWTH_AND_MONETIZATION.md)) y la búsqueda semántica de posts y docs del agente (E5). Los vectores se guardan en **pgvector** en nuestro Postgres; cambiar de proveedor es re-embeber (~1 vector por publicación más los chunks de docs, horas de batch). Coste marginal (**< 2.000 $/mes**).
 
 ### E2. Generación de imágenes — **Buy, detrás de un adaptador**
 - **Elección:** un proveedor de imagen de primer nivel vía API (FLUX de Black Forest Labs como primera opción, por calidad/precio y licencia comercial clara), con metadatos C2PA en cada imagen generada.
@@ -216,7 +217,7 @@ Todas tienen sustituto directo; ninguna justifica más análisis que esta tabla.
 
 | # | Categoría | Decisión | Elección | Coste estimado a escala ($/mes) |
 |---|---|---|---|---|
-| 1 | Email sending | OSS + Build | KumoMTA en bare metal, IPs/ASN propios | ~150k (incl. equipo) vs >1M con ESP |
+| 1 | Email sending | OSS + Build | KumoMTA en bare metal, IPs/ASN propios | ~170k (incl. equipo) vs >1M con ESP |
 | 2 | Web hosting | Buy | Cloudflare Workers + for SaaS; AWS EKS para el core | ~160k–240k |
 | 3 | Database + queue | Híbrido | RDS Postgres, Redpanda, ClickHouse (Cloud → self), Valkey | ~90k–130k |
 | 4 | Payments | Buy | Stripe Connect Express + Billing; Mercado Pago en LatAm (fase posterior) | ~150k–200k (tarifas Connect) |
@@ -229,7 +230,8 @@ Todas tienen sustituto directo; ninguna justifica más análisis que esta tabla.
 | 11 | Click verification | Build | Clasificador en tiempo real + diferido | ~5k + equipo |
 | 12 | Media + CDN | Buy | R2 + Cloudflare Images | ~15k |
 | 13 | Product analytics | Buy | PostHog Cloud (solo uso de creadores) | ~10k–15k |
-| E1 | LLMs | Buy | Claude Opus 5.5 / Sonnet 5.5 / Haiku 5.5 | ~100k–200k (créditos IA) |
+| E1 | LLMs | Buy | Claude (modelo grande / medio / pequeño) | ~100k–200k (créditos IA) |
+| E1b | Embeddings | Buy | Proveedor de embeddings vía API (p. ej. Voyage AI) tras adaptador; vectores en pgvector | < 2k |
 | E2 | Imagen | Buy | FLUX vía API, tras adaptador | ~40k |
 | E3 | STT / TTS | Híbrido | Deepgram → Whisper propio; TTS bajo demanda | ~60k–80k |
 | E4 | Vídeo | Buy | LiveKit Cloud + Mux | ~80k–150k (add-on) |

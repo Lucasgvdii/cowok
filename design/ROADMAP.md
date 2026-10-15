@@ -61,14 +61,14 @@ gantt
 
 **Alcance (mapeo al backlog):**
 
-- **Entregabilidad** — MTA propio (KumoMTA) con colas por proveedor; warming de IPs y dominios por calendario; clasificación de bounces (hard/soft/mailbox full/DNS) y reintento de deferidos 24 h+; supresiones en tres capas (global, publicación, transaccional) con temporales que expiran y permanentes; one-click unsubscribe (RFC 8058); header `Feedback-ID` por publicación para Gmail; alta en FBLs de Yahoo, Microsoft (JMRP/SNDS) y demás; monitor de blocklists con retirada automática de IP; kill-switch por tasa de quejas > 0,1 %.
+- **Entregabilidad** — MTA propio (KumoMTA) con colas por proveedor; warming de IPs y dominios por calendario; clasificación de bounces (hard/soft/mailbox full/DNS) y reintento de deferidos 24 h+; supresiones en tres capas (global, publicación, transaccional) con temporales que expiran y permanentes; one-click unsubscribe (RFC 8058); header `Feedback-ID` por publicación para Gmail; alta en FBLs de Yahoo, Microsoft (JMRP/SNDS) y demás; monitor de blocklists con retirada automática de IP; kill-switch por tasa de quejas (freno y aviso > 0,1 %, pausa del envío > 0,3 %; ver [DELIVERABILITY.md](DELIVERABILITY.md) §12); rango /24 propio al lanzar; **relay Postmark solo para transaccional** (magic links, login) durante el cold start del pool `txn`, nunca para newsletters.
 - **Dominios** — dominio custom alineado DKIM/SPF/DMARC con asistente que verifica DNS; múltiples remitentes por publicación.
 - **Suscriptores** — import CSV con validación; fuente de adquisición en cada suscriptor; validación de email propia (sintaxis, MX, desechables, typos tipo `gmial.com`); doble opt-in respetado.
 - **Formularios** — embed (full/fixed/slim), Turnstile + honeypot + rate limiting en cada endpoint de alta; éxito con mensaje o redirect.
 - **Editor básico** — Tiptap con párrafos, títulos, imágenes (redimensionado automático en R2/Images), botones, citas, divisores, código; slash commands; markdown shortcuts; autosave; renderer propio a tablas inline; medidor de tamaño anti-clipping; preflight obligatorio.
-- **Auth** — magic links de un solo uso con expiración en minutos, comparación en tiempo constante, rate limit; roles admin/member/contributor a nivel workspace.
+- **Auth** — magic links de un solo uso con expiración de 15 minutos, comparación en tiempo constante, rate limit; roles owner/admin/member/contributor a nivel workspace.
 - **Alcance de UI** — dashboard del creador **solo desktop** (en móvil: "Tirada se usa desde un ordenador"); solo las superficies del lector son responsive.
-- **Plataforma** — Postgres con RLS, outbox → Redpanda, ClickHouse para eventos, Temporal, observabilidad (OpenTelemetry + Sentry + PagerDuty).
+- **Plataforma** — Postgres con RLS, outbox → Redpanda, ClickHouse para eventos, Temporal Cloud, observabilidad (OpenTelemetry + Sentry + Grafana Cloud + incident.io).
 
 **Criterios de salida (todos, no "la mayoría"):**
 
@@ -138,6 +138,7 @@ gantt
 - **Audio** — versión audio de cada post (TTS de terceros).
 - **Patrocinios directos** — productos de patrocinio con formato y precio propios, placements programados. Es el embrión de la ad network: primero el lado de la oferta.
 - **Integraciones** — Zapier/Make, Google Analytics, Linktree, HubSpot.
+- **Infraestructura de envío** — rango IP propio **/22** y **ASN propio** para llegar a las ~600 IPs calientes del pico (ver [DELIVERABILITY.md](DELIVERABILITY.md) §1).
 
 **Criterios de salida:**
 
@@ -164,7 +165,7 @@ gantt
 - **Ad network** — inventario reclamable para próximos posts, inserción en un clic, brand safety review, clics filtrados de bots, parámetros de atribución, wallet y payouts, informes por post, historial de ofertas. Requiere equipo comercial (ver riesgos).
 - **Recomendaciones de pago** — solicitudes con aceptar/rechazar, insights por partner, pausa/fin, detección de fraude y **clawback** de payouts por suscriptores falsos.
 - **Productos digitales** — archivos, links, guías, memberships, variantes, cupones, reviews moderadas, tags, storefront, lead magnets gratuitos, entrega automática vía Temporal, productos dentro de emails y automatizaciones.
-- **Podcast** — hosting, RSS con import preservando GUIDs y redirects, distribución Apple/Spotify/YouTube, transcripciones, analítica IAB con filtrado de bots, feeds privados por tier, página por episodio, webhooks.
+- **Podcast** — hosting, RSS con import preservando GUIDs y redirects, distribución Apple/Spotify/YouTube, transcripciones, analítica IAB con filtrado de bots y **proceso de certificación IAB Podcast Measurement v2.2**, feeds privados por tier, página por episodio, webhooks.
 - **Comunidad** — canales gratis/de pago, sync de posts, comentarios en hilo, DMs, pins, cola de moderación, ban/unban, roles mapeados, métricas, integraciones Discord (roles por tier) y Luma.
 - **Webinars** — LiveKit + Mux, hasta 10.000 asistentes, entradas en 10 monedas, 5 recordatorios, invitaciones de calendario, grabación y replay vendible. Coaching 1:1 vía integración con Cal.com.
 - **Paywall avanzado** — metered paywall, suscripciones regalo, grupos con asientos y deals custom.
@@ -179,7 +180,7 @@ gantt
 | Anunciantes activos por trimestre | ≥ 150 |
 | Clawback / payouts de recos de pago | < 5 % (si es más, el filtro llega tarde) |
 | Webinar 10k asistentes, latencia glass-to-glass p95 | < 3 s |
-| Analítica podcast | certificación IAB 2.x iniciada |
+| Analítica podcast | certificación IAB (v2.2) iniciada |
 | GMV procesado por creadores (anualizado) | ≥ 50 M USD |
 
 **Equipo:** ~44 ingenieros, ~65 personas.
@@ -284,8 +285,8 @@ Con equipo en San Francisco/Nueva York, multiplicar por ~1,8. Ingresos esperados
 
 | # | Riesgo | Prob. | Impacto | Mitigación |
 |---|---|---|---|---|
-| 1 | **Cold start de reputación de IPs**: IPs nuevas sin historial, Gmail y Microsoft desconfían | Alta | Crítico | Warming por calendario con listas de design partners muy comprometidas; pool "en prueba" para publicaciones nuevas; seed testing diario; relay de respaldo contratado solo para transaccional (magic links) durante los primeros meses. |
-| 2 | **Un cliente malo contamina el pool compartido** (listas compradas, spam) | Alta | Crítico | Pool de prueba, kill-switch automático a 0,1 % de quejas, revisión de imports grandes, validación de listas al importar, sunset policy por defecto, T&S desde Fase 1. |
+| 1 | **Cold start de reputación de IPs**: IPs nuevas sin historial, Gmail y Microsoft desconfían | Alta | Crítico | Warming por calendario con listas de design partners muy comprometidas; pool "en prueba" para publicaciones nuevas; seed testing diario; relay de respaldo contratado (Postmark) solo para transaccional (magic links) durante los primeros meses. |
+| 2 | **Un cliente malo contamina el pool compartido** (listas compradas, spam) | Alta | Crítico | Pool de prueba, kill-switch automático de quejas (freno a 0,1 %, pausa a 0,3 %), revisión de imports grandes, validación de listas al importar, sunset policy por defecto, T&S desde Fase 1. |
 | 3 | **Cambios de política de Gmail/Yahoo/Microsoft** (umbrales de quejas, autenticación, nuevas cabeceras) | Media | Alto | Squad dedicado que sigue anuncios y M3AAWG; arquitectura donde una nueva cabecera o regla es configuración de KumoMTA, no un deploy; márgenes internos por debajo de los umbrales públicos. |
 | 4 | **Dependencia de Stripe** (cuentas congeladas, Connect limitado en algunos países de LatAm) | Media | Alto | Contratos directos y gestión de cuentas con Stripe; abstracción mínima de pagos para añadir un segundo proveedor (p. ej., Mercado Pago) en países no soportados; exportación de clientes Stripe siempre disponible. |
 | 5 | **Cold start de la ad network** (mercado de dos lados) | Alta | Alto | Empezar por patrocinios directos (solo lado oferta), vertical concentrado (tech/negocios en español), equipo comercial propio, garantías de clics verificados como argumento de venta. |

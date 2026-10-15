@@ -17,7 +17,7 @@ Relacionados: [ARCHITECTURE.md](ARCHITECTURE.md) (servicios, Postgres, bus), [DE
 | Embeds | **Snapshot en el momento de insertar** | El email necesita una tarjeta estática; la web usa el snapshot como fachada. |
 | Imágenes | **R2 (originales) + Cloudflare Images (variantes)** | Sin egress, redimensionado al vuelo. |
 | Plantillas | **Marco referenciado (resuelto al renderizar) + esqueleto copiado** | Cambios de plantilla llegan a posts vivos sin pisar contenido. |
-| IA | **Claude**, y toda edición de IA entra como *sugerencia* revisable | La IA es un colaborador más (principio 10), no un botón que reescribe en silencio. |
+| IA | **Claude**, y toda edición de IA entra como *sugerencia* revisable | La IA es un colaborador más (principio 11), no un botón que reescribe en silencio. |
 | QA visual | **Snapshot tests propios + Email on Acid API** en CI | Construimos el renderer, compramos la granja de clientes de correo. |
 | Dispositivo del creador | **Solo desktop** (ancho mínimo ~1024 px); la vista previa sí simula el móvil del lector | Un editor colaborativo con columnas, comentarios y preflight no cabe en un teléfono; el lector, en cambio, lee en móvil. |
 
@@ -120,7 +120,7 @@ flowchart LR
 ```
 
 - **Documento Yjs por post** (y por email de automatización: misma pieza, ver [PLATFORM.md](PLATFORM.md)). Hocuspocus stateless detrás de un balanceador con sticky por `postId`; Valkey reparte updates entre instancias.
-- **Auth**: el WebSocket se abre con un JWT de vida corta emitido por la API con el rol del usuario sobre esa publicación. `contributor` edita, `viewer` (o un invitado de revisión) solo comenta. Revocar el acceso cierra las conexiones abiertas al momento: Hocuspocus suscribe a `member.removed` del bus.
+- **Auth**: el WebSocket se abre con un JWT de vida corta emitido por la API con el rol del usuario sobre esa publicación. `owner`, `admin`, `member` y `contributor` editan (el contributor solo borradores); un invitado de revisión (sin rol de workspace) solo comenta. Revocar el acceso cierra las conexiones abiertas al momento: Hocuspocus suscribe a `member.removed` del bus.
 - **Persistencia**: los updates binarios de Yjs se apilan en `post_ydoc_updates`; un compactor los fusiona cada N updates y además deriva el **AST JSON canónico**, que es lo que leen renderers, API y búsqueda. Nunca se renderiza desde el Y.Doc directamente.
 - **Presencia** (awareness de Yjs): cursores y selecciones con color y nombre, avatares en la cabecera, "Ana está editando el bloque Patrocinio". Indicador de *quién tiene el post abierto en modo envío* para evitar que alguien edite mientras otro programa.
 
@@ -242,7 +242,7 @@ Tres orígenes, un mismo flujo: **ordenador** (drop/paste de archivos), **biblio
 
 ### 4.7 Solo desktop para el creador, vista previa móvil para el lector
 
-- **El editor y todo el dashboard son solo desktop**: ancho mínimo ~1024 px, sin layouts móviles ni tablet que mantener. Por debajo de ese ancho (o en un user agent móvil) se muestra una pantalla "Tirada se usa desde un ordenador" con un botón **"Enviarme el enlace"** (email al propio usuario con el deep link a lo que intentaba abrir: post, comentario, informe). Los emails de notificación (menciones, comentarios) también llevan ese deep link y se abren igual.
+- **El editor y todo el dashboard son solo desktop**: ancho mínimo 1024 px, sin layouts móviles ni tablet que mantener. Por debajo de ese ancho (o en un user agent móvil) se muestra una pantalla "Tirada se usa desde un ordenador" con un botón **"Enviarme el enlace"** (email al propio usuario con el deep link a lo que intentaba abrir: post, comentario, informe). Los emails de notificación (menciones, comentarios) también llevan ese deep link y se abren igual.
 - Consecuencia de diseño: el mapa de teclado (§4.3), los paneles laterales (comentarios, biblioteca, preflight) y el gauge (§9) asumen pantalla ancha y teclado físico; no hay que degradar nada.
 - **La vista previa sí es móvil-primero**: los emails se leen mayoritariamente en el teléfono. El panel de preview tiene conmutador **Escritorio / Móvil (375 px) / Móvil oscuro** para email y web, y el preview móvil es el que se muestra por defecto en el paso de envío. Renderiza el mismo HTML que se enviará (con las media queries de §6.1 activas en un iframe de 375 px), apilado de columnas incluido. El envío de prueba a tu propio teléfono sigue siendo la verificación final.
 - Las superficies del **lector** (web, emails, landing de polls, login) son, por supuesto, responsive; esta restricción solo aplica a la herramienta del creador ([PLATFORM.md](PLATFORM.md)).
@@ -343,7 +343,7 @@ flowchart LR
 - El guion no es "leer el HTML": títulos con pausa, listas enumeradas, imágenes por su alt (si es útil), tablas resumidas, código omitido, enlaces sin URL, citas introducidas ("cita de…"), bloques `!audio` fuera, intro/outro de la plantilla.
 - **Caché por bloque** (id + hash): corregir una errata re-sintetiza un párrafo, no 20 minutos.
 - Versión gratis y premium = dos audios (el corte del paywall también aplica); el premium va al feed privado ([PLATFORM.md](PLATFORM.md)). Proveedor de TTS comprado ([BUILD_VS_BUY.md](BUILD_VS_BUY.md)); voz clonada del autor opcional con consentimiento explícito.
-- Workflow en Temporal, disparado por `post.published`; el reproductor aparece en la web y como enlace "Escuchar" en el email cuando está listo.
+- Workflow en Temporal. Por defecto se sintetiza **bajo demanda en la primera reproducción** y se cachea en R2 (criterio de coste de [BUILD_VS_BUY.md](BUILD_VS_BUY.md), E3); si la publicación publica el audio en su feed de podcast, el workflow se dispara con `post.published`. El reproductor aparece en la web y como enlace "Escuchar" en el email.
 
 ---
 
@@ -468,7 +468,7 @@ Resto de requisitos:
 
 ## 12. IA en el editor
 
-Proveedor: **Claude** vía API (modelo rápido para gramática y acciones en línea; el más capaz para el agente). Contexto común: AST del post como texto estructurado, guía de estilo de la publicación (generada a partir de los 20 últimos posts y editable) y glosario.
+Proveedor: **Claude** vía API (Claude (modelo pequeño) para gramática y acciones en línea; Claude (modelo medio) para reescribir y traducir; Claude (modelo grande) para el agente). Contexto común: AST del post como texto estructurado, guía de estilo de la publicación (generada a partir de los 20 últimos posts y editable) y glosario.
 
 | Función | UX | Implementación |
 |---|---|---|

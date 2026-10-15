@@ -367,7 +367,7 @@ stateDiagram-v2
 
 ### 8.3 Brand safety (en los dos sentidos)
 
-1. **Revisión de campaña** (SLA 24 h laborables): el clasificador con Claude etiqueta categoría y riesgo; pasa luego a revisión humana si es la primera campaña del anunciante o si el riesgo es medio/alto. Categorías prohibidas: apuestas sin licencia, venta de tokens/ICOs, contenido adulto, armas, préstamos rápidos, MLM y claims de salud no sustentados. Restringidas (solo con opt-in del creador): alcohol, política, cripto regulada, CBD.
+1. **Revisión de campaña** (SLA 24 h laborables): el clasificador con Claude (modelo pequeño) etiqueta categoría y riesgo; pasa luego a revisión humana si es la primera campaña del anunciante o si el riesgo es medio/alto. Categorías prohibidas: apuestas sin licencia, venta de tokens/ICOs, contenido adulto, armas, préstamos rápidos, MLM y claims de salud no sustentados. Restringidas (solo con opt-in del creador): alcohol, política, cripto regulada, CBD.
 2. **Landing page**: Google Web Risk/Safe Browsing, cadena de redirecciones (máx. 3), re-escaneo diario durante el vuelo. Si la landing cambia a algo malicioso, la campaña se pausa y los enlaces ya enviados redirigen a un aviso.
 3. **Seguridad para el anunciante**: cada publicación lleva etiquetas de contenido (clasificadas por Claude sobre los últimos posts) y el anunciante puede excluir categorías sensibles (tragedias, política, NSFW). Las publicaciones en el pool "de prueba" de entregabilidad no entran en la red.
 
@@ -384,7 +384,7 @@ El **wallet de Tirada** es un libro mayor de doble entrada en Postgres (`ledger_
 
 ### 8.5 Arranque en frío: llegar a 500+ marcas
 
-Seamos honestos: **esto no es un problema de ingeniería, es una operación de ventas**. Las 525+ marcas de beehiiv son años de equipo comercial. El plan:
+Seamos honestos: **esto no es un problema de ingeniería, es una operación de ventas**. Las 525+ marcas de beehiiv son años de equipo comercial. El plan (los meses se cuentan desde el lanzamiento de los patrocinios directos en la Fase 2, ~mes 9 de [ROADMAP.md](ROADMAP.md); el marketplace llega en la Fase 3):
 
 1. **Meses 0–6: patrocinios directos primero (§9).** Los creadores ya tienen anunciantes. Cada anunciante que compra un patrocinio directo a través de Tirada crea una cuenta de `Advertiser` y recibe, con permiso del creador, una invitación al marketplace. Es el único canal de adquisición de marcas que escala sin vendedores.
 2. **Meses 3–18: equipo de ventas.** 4 AEs + 2 account managers + 1 ad ops, verticales concretos donde la newsletter rinde (SaaS B2B, fintech, herramientas de IA, educación online, DTC). Supuesto realista: ~3 marcas nuevas por AE al mes → ~150 marcas/año solo de ventas.
@@ -591,7 +591,7 @@ Se cobra por **suscriptores activos**: excluye bajas, rebotes permanentes y susc
 | > 250.000 | Enterprise (~2 $ por cada 1.000 adicionales, SLA, IP dedicada, SSO) | a medida |
 
 - **Sin gating de funcionalidades de monetización.** El plan gratuito puede cobrar suscripciones, vender productos y hacer webinars (hasta 100 asistentes). Ganamos cuando el creador crece; ponerle barreras a ganar dinero es ponérselas a nuestra propia cuota futura.
-- Lo que sí distingue al plan gratuito: marca "Hecho con Tirada" en el pie, envío desde el pool compartido "en prueba" ([DELIVERABILITY.md](DELIVERABILITY.md)), un único miembro del equipo y subdominio `*.tirada.so` (dominio propio desde 10k). La ad network exige 1.000 suscriptores activos en cualquier plan.
+- Lo que sí distingue al plan gratuito: marca "Hecho con Tirada" en el pie, envío solo por pools compartidos, empezando en el pool "en prueba" (`probation`) como toda publicación nueva y sin IP dedicada ([DELIVERABILITY.md](DELIVERABILITY.md) §2), un único miembro del equipo y subdominio `*.tirada.so` (dominio propio desde 10k). La ad network exige 1.000 suscriptores activos en cualquier plan.
 - Cupo de webinar incluido: 2.000 horas-asistente al mes desde el plan de 10k.
 
 ### 13.3 Mezcla objetivo
